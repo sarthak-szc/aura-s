@@ -1,0 +1,34 @@
+# Deploy on https://render.com → New → Blueprint
+services:
+  - type: web
+    name: aura-api
+    runtime: python
+    plan: free
+    rootDir: Aura Platform Backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENV
+        value: production
+      - key: DEBUG
+        value: false
+      - key: MONGO_URL
+        sync: false
+      - key: MONGO_DB
+        value: aura_db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: AZURE_STORAGE_CONNECTION_STRING
+        sync: false
+      - key: AZURE_BLOB_CONTAINER
+        value: aura-uploads
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_DEPLOYMENT
+        value: gpt-4.1-mini
+      - key: ADMIN_SETUP_ENABLED
+        value: true
