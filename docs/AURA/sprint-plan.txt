@@ -1,0 +1,368 @@
+User Management + Auth  -> fastapi-users[beanie]
+Dashboard 
+Client Management 
+Process Managment -> file will be upload at step 2 -> data need populated -> step2,3,4 & user can override it 
+
+
+Tech Stack 
+
+Layer,Technology,Azure Service
+Frontend,Next.js 15 (App Router + TypeScript + Tailwind + shadcn/ui),Azure Static Web Apps (Recommended) or App Service
+Backend,FastAPI + Python 3.11+ + LangChain + LangGraph,Azure App Service (Container or Python)
+Database,MongoDB Atlas (Fully managed),MongoDB Atlas on Azure
+Vector Store,MongoDB Atlas Vector Search,Built-in (native LangChain integration)
+File Storage,Azure Blob Storage,"For uploaded PDFs, CSVs, contracts"
+Authentication,  fastapi-users[beanie] + Azure AD (optional)
+LLM,Azure OpenAI (gpt-4o)
+
+ 
+Implementation Plan
+Phase 0: Project Setup for frontend + backend
+Phase 1: Backend + MongoDB Integration (LangChain + MongoDB Vector Store)
+Phase 2: AI Agents with LangGraph
+	Contract Analysis Agent
+	Spend Analytics Agent
+	Procurement Process Advisor
+	Supplier Intelligence Agent
+Phase 3: Frontend Development
+Phase 4 : Client Management 
+Phase 5 : Process Managment 
+Phase 6 : User Management + Auth
+Phase 7 : Dashboard + Report Flow	
+
+Sprint Distribution
+Week	Focus
+Week 1	Foundation + Core Backend + AI Infrastructure
+Week 2	AI Agents + Frontend + Workflow Features
+Week 3	Dashboards + Auth + Optimization + UAT
+
+WEEK 1 — Foundation & Core Platform
+Goal
+
+Complete:
+
+Environment setup
+MongoDB integration
+Azure deployment pipeline
+File ingestion
+RAG foundation
+Base frontend shell
+
+WEEK 2 — AI Agents + Procurement Workflows
+Goal
+
+Build intelligent procurement automation.
+
+This aligns with procurement AI capabilities in the uploaded deck:
+
+Contract analysis
+Spend analytics
+Supplier intelligence
+Automated sourcing
+
+WEEK 3 — Enterprise Features, Dashboard & Production Readiness
+Goal
+
+Complete enterprise-ready modules and prepare for UAT/demo.
+
+WEEK 1 — Foundation & Core Platform
+Goal
+
+Complete:
+
+Environment setup
+MongoDB integration
+Azure deployment pipeline
+File ingestion
+RAG foundation
+Base frontend shell
+Sprint 1 (Days 1–5)
+Day 1 — Architecture & Environment Setup
+Backend Setup
+FastAPI project structure
+Poetry/pip dependency management
+Environment configuration
+Logging framework
+API versioning
+Swagger/OpenAPI
+Frontend Setup
+Next.js 15 setup
+Tailwind + shadcn/ui
+Folder structure
+Route groups
+Theme setup
+Azure Setup
+Azure App Service
+Azure Blob Storage
+Azure OpenAI deployment
+MongoDB Atlas cluster
+Azure Static Web App
+Deliverables
+Git repositories
+CI/CD pipeline
+Dev/Staging environments
+Base deployment live
+Day 2 — Database & Core Models
+MongoDB Collections
+users
+clients
+suppliers
+contracts
+procurement_requests
+invoices
+workflows
+audit_logs
+ai_conversations
+Beanie ODM Setup
+Async MongoDB connection
+Schema validation
+Indexing strategy
+Vector Search
+MongoDB Atlas vector index
+Embedding pipeline
+Semantic retrieval setup
+Deliverables
+MongoDB schemas
+Working CRUD APIs
+Vector search ready
+Day 3 — File Upload & AI Ingestion
+Azure Blob Integration
+PDF upload
+CSV upload
+Document metadata
+Signed URLs
+AI Ingestion Pipeline
+LangChain loaders
+OCR integration
+Chunking strategy
+Embedding generation
+Vector storage
+Supported Documents
+
+From procurement workflow:
+
+Contracts
+RFQ/RFP
+Vendor agreements
+Spend reports
+Invoice PDFs
+Deliverables
+Upload APIs
+AI indexing pipeline
+Searchable document repository
+Day 4 — RAG Backend & AI Base Layer
+LangChain Setup
+Azure OpenAI integration
+Embedding model setup
+Retrieval chains
+Context memory
+LangGraph Base
+Agent orchestration framework
+Shared state model
+Tool execution layer
+Base AI APIs
+Chat endpoint
+Semantic search endpoint
+Context retrieval endpoint
+Deliverables
+Working RAG chatbot
+Procurement document Q&A
+Day 5 — Frontend Foundation
+UI Modules
+Login page
+Dashboard shell
+Sidebar navigation
+File upload screen
+AI chat UI
+Procurement request forms
+API Integration
+Axios/fetch wrappers
+Auth middleware
+Global state management
+Deliverables
+Fully connected frontend shell
+Backend integration complete
+WEEK 2 — AI Agents + Procurement Workflows
+Goal
+
+Build intelligent procurement automation.
+
+This aligns with procurement AI capabilities in the uploaded deck:
+
+Contract analysis
+Spend analytics
+Supplier intelligence
+Automated sourcing
+Sprint 2 (Days 6–10)
+Day 6 — Contract Analysis Agent
+Features
+Contract clause extraction
+Risk detection
+Expiry tracking
+Compliance checks
+Obligation extraction
+AI Capabilities
+NLP summarization
+Red flag detection
+Procurement policy validation
+Deliverables
+Contract AI agent
+Clause extraction APIs
+Day 7 — Spend Analytics Agent
+Features
+Spend categorization
+Spend anomaly detection
+Department-wise spend
+Vendor spend analytics
+Maverick spend detection
+AI Features
+AI-based spend insights
+Forecasting trends
+Savings recommendation
+Dashboard Metrics
+
+Aligned with procurement analytics from deck:
+
+Spend visibility
+Cost optimization
+Procurement efficiency
+Deliverables
+Spend AI agent
+Analytics APIs
+Charts integration
+Day 8 — Supplier Intelligence Agent
+Features
+Supplier scoring
+Vendor risk analysis
+ESG scoring
+Delivery performance analysis
+AI Logic
+Risk prediction
+Supplier recommendation
+Vendor comparison
+Deliverables
+Supplier intelligence APIs
+AI recommendation engine
+Day 9 — Procurement Process Advisor Agent
+Features
+
+AI assistant for:
+
+Procurement policy guidance
+RFQ recommendations
+Workflow assistance
+Approval guidance
+LangGraph Workflow
+
+Multi-agent orchestration:
+
+Retrieval node
+Policy validation node
+Recommendation node
+Response generation node
+Deliverables
+Procurement advisor chatbot
+Multi-agent orchestration
+Day 10 — Workflow & Process Management
+Procurement Workflow
+
+Based on the procurement lifecycle from the uploaded deck :
+
+Need Identification
+Purchase Requisition
+Supplier Sourcing
+Purchase Order
+Goods Receipt
+Invoice Verification
+Payment & Closure
+Features
+Workflow engine
+Approval hierarchy
+Status tracking
+Notifications
+SLA monitoring
+Deliverables
+End-to-end procurement workflow MVP
+WEEK 3 — Enterprise Features, Dashboard & Production Readiness
+Goal
+
+Complete enterprise-ready modules and prepare for UAT/demo.
+
+Sprint 3 (Days 11–15)
+Day 11 — Client Management Module
+Features
+Multi-tenant client architecture
+Client onboarding
+Tenant isolation
+Client-level dashboards
+Deliverables
+Multi-client support
+Tenant APIs
+Day 12 — User Management & Authentication
+Authentication
+fastapi-users[beanie]
+JWT auth
+RBAC roles
+Optional Azure AD
+SSO login
+Enterprise identity integration
+Roles
+Super Admin
+Procurement Manager
+Finance
+Supplier
+Auditor
+Deliverables
+Secure auth system
+RBAC complete
+Day 13 — Dashboard & Reporting
+Dashboard Widgets
+Procurement KPIs
+Spend analytics
+Supplier performance
+Contract risks
+Workflow bottlenecks
+Reports
+PDF export
+CSV export
+AI-generated summaries
+Charts
+Spend trend
+Supplier risk heatmap
+Procurement cycle metrics
+Deliverables
+Executive dashboard
+Reporting engine
+Day 14 — Optimization, QA & Security
+Performance
+API optimization
+MongoDB indexing
+Caching strategy
+Async processing
+Security
+Input validation
+Rate limiting
+Audit logging
+Secure blob access
+QA
+Functional testing
+Workflow testing
+AI response validation
+Deliverables
+Production-ready release candidate
+Day 15 — UAT, Deployment & Handover
+Final Activities
+UAT fixes
+Documentation
+Deployment automation
+Monitoring setup
+Knowledge transfer
+Azure Monitoring
+App Insights
+Log Analytics
+Error alerts
+Deliverables
+Production deployment
+Architecture documentation
+API documentation
+Admin guide

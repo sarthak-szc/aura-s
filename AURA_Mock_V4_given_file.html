@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuRA — AI Discovery Framework | SenzCraft</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dk:#060E1E;--da:#0B1A35;--nv:#1A3260;--bl:#1D5FD4;--cy:#00C2E0;
+  --pg:#EEF3FB;--cd:#FFF;--th:#07112B;--tb:#1C2C48;--tm:#576A8A;--tl:#97A9C4;
+  --br:#D8E3F2;--ok:#0AB472;--wn:#F0A500;--dn:#E03A3A;--pu:#7C3AED;
+  --sbw:258px;--sbc:64px;--hh:60px;
+  --rs:6px;--rm:10px;--rl:16px;
+  --ss:0 1px 4px rgba(7,17,43,.07);--sm:0 4px 14px rgba(7,17,43,.10);--sl:0 8px 28px rgba(7,17,43,.14);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--pg);color:var(--tb);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,h5,h6{font-family:'Sora',sans-serif;color:var(--th)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--br);border-radius:4px}
+img{display:block}
+
+/* ─── FORMS ─── */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tm);margin-bottom:5px}
+label.req::after{content:' *';color:var(--dn)}
+.fc{width:100%;padding:9px 13px;border:1.5px solid var(--br);border-radius:var(--rm);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--th);background:var(--cd);outline:none;transition:border-color .2s,box-shadow .2s}
+.fc:focus{border-color:var(--bl);box-shadow:0 0 0 3px rgba(29,95,212,.10)}
+textarea.fc{resize:vertical;min-height:72px}
+.fc-ro{background:#F4F7FD;color:var(--tm);pointer-events:none}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.ht{font-size:11px;color:var(--tl);margin-top:4px}
+
+/* ─── CURRENCY FIELD ─── */
+.curr-select-wrap{position:relative}
+.curr-flag{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none}
+.fc-curr{padding-left:36px!important;font-weight:600}
+.curr-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(29,95,212,.08);border:1px solid rgba(29,95,212,.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--bl)}
+.curr-hint{font-size:11px;color:var(--tm);margin-top:5px;padding:8px 10px;background:#F0F7FF;border-radius:6px;border-left:3px solid var(--bl)}
+
+/* ─── TAGS ─── */
+.sys-tag{display:inline-flex;align-items:center;background:rgba(29,95,212,.1);border:1px solid rgba(29,95,212,.25);color:var(--bl);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.tag-suggest-item{padding:9px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--br)}
+.tag-suggest-item:last-child{border-bottom:none}
+.tag-suggest-item:hover{background:var(--pg)}
+.tag-suggest-new{color:var(--bl);font-weight:600}
+
+/* ─── GOAL ROWS ─── */
+.goal-row input:focus{border-color:var(--bl);box-shadow:0 0 0 3px rgba(29,95,212,.10)}
+
+/* ─── NUMERIC UNIT ─── */
+.num-wrap{display:flex;gap:0}
+.num-wrap input{border-radius:var(--rm) 0 0 var(--rm);border-right:none;flex:1}
+.num-wrap input:focus{z-index:1}
+.num-unit{padding:9px 11px;background:#F5F8FD;border:1.5px solid var(--br);border-radius:0 var(--rm) var(--rm) 0;font-size:12px;font-weight:600;color:var(--tm);white-space:nowrap;display:flex;align-items:center}
+.num-unit select{background:transparent;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--tm);cursor:pointer}
+
+/* ─── ARCHETYPE CARDS ─── */
+.arch-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.arch-card{border:1.5px solid var(--br);border-radius:var(--rm);padding:14px 16px;transition:all .16s;cursor:default;background:#fff}
+.arch-card:hover{border-color:rgba(29,95,212,.3);box-shadow:var(--sm)}
+.arch-card.selected{border-color:var(--bl);background:rgba(29,95,212,.04)}
+.arch-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.arch-card-title{font-size:13px;font-weight:700;color:var(--th)}
+.arch-card-body{font-size:12px;color:var(--tm);line-height:1.5}
+.arch-check{width:18px;height:18px;border-radius:4px;border:2px solid var(--br);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;flex-shrink:0;transition:all .14s}
+.arch-check.on{background:var(--bl);border-color:var(--bl);color:#fff}
+.tech-stack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:0}
+.tech-chip{background:#F6F9FD;border:1px solid var(--br);border-radius:8px;padding:10px 12px}
+.tech-chip-lbl{font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--tm);margin-bottom:4px}
+.tech-chip-val{font-size:12px;color:var(--th)}
+
+/* ─── GSDA COMPACT ─── */
+.gsda-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.gsda-section{border:1px solid var(--br);border-radius:var(--rm);overflow:hidden;background:#fff}
+.gsda-hdr{padding:9px 13px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--br)}
+.gsda-hdr h5{font-size:12px;font-weight:700}
+.gsda-body{padding:8px 12px}
+.gsda-item{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid var(--br);font-size:12px;line-height:1.4}
+.gsda-item:last-child{border-bottom:none}
+.gsda-num{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px;color:#fff}
+.gsda-auto-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(135deg,#F8FAFD,#F0F7FF);border-top:1px solid var(--br);flex-wrap:wrap}
+.gsda-auto-lbl{font-size:11px;font-weight:700;color:var(--tm);white-space:nowrap}
+.yes-no{display:flex;gap:4px}
+.yn-btn{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--br);background:#fff;color:var(--tm);transition:all .14s}
+.yn-btn.yes.on{background:#E8FBF3;border-color:#6EE7B7;color:#065F46}
+.yn-btn.no.on{background:#FEF2F2;border-color:#FECACA;color:#991B1B}
+.pct-wrap{display:flex;align-items:center;gap:5px}
+.pct-wrap input{width:64px;padding:4px 8px;border:1.5px solid var(--br);border-radius:6px;font-size:13px;font-weight:700;text-align:center;outline:none;font-family:'DM Sans',sans-serif}
+.pct-wrap input:focus{border-color:var(--bl)}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s;line-height:1;white-space:nowrap}
+.bp{background:var(--bl);color:#fff}.bp:hover{background:#1750be;box-shadow:0 4px 12px rgba(29,95,212,.32);transform:translateY(-1px)}
+.bs{background:var(--cd);color:var(--tb);border:1.5px solid var(--br)}.bs:hover{background:var(--pg)}
+.bo{background:transparent;color:var(--bl);border:1.5px solid var(--bl)}.bo:hover{background:rgba(29,95,212,.05)}
+.bai{background:linear-gradient(135deg,#5C4FD6,var(--cy));color:#fff}.bai:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 14px rgba(92,79,214,.38)}
+.bok{background:var(--ok);color:#fff}.bok:hover{background:#099d63}
+.bdn{background:var(--dn);color:#fff}
+.bwn{background:var(--wn);color:#fff}
+.bsm{padding:6px 13px;font-size:12px}
+.bfl{width:100%;justify-content:center}
+.bdanger{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
+
+/* ─── SHELL ─── */
+.app{display:flex;min-height:100vh}
+.sidebar{width:var(--sbw);background:linear-gradient(175deg,var(--dk) 0%,var(--da) 55%,var(--nv) 100%);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:200;transition:width .28s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.sidebar.col{width:var(--sbc)}
+.sb-logo{padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);min-height:var(--hh);flex-shrink:0}
+.sb-logo img{height:28px;flex-shrink:0;filter:brightness(0) invert(1)}
+.lt .an{font-family:'Sora',sans-serif;font-size:16px;font-weight:800;color:#fff;white-space:nowrap;letter-spacing:-.5px}
+.lt .an span{color:var(--cy)}
+.lt .at{font-size:9px;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:1.4px}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto}
+.nav-sec{font-size:9px;text-transform:uppercase;letter-spacing:1.4px;color:rgba(255,255,255,.25);padding:0 9px;margin:14px 0 4px}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;cursor:pointer;transition:all .14s;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;margin-bottom:2px;white-space:nowrap}
+.ni:hover{background:rgba(255,255,255,.08);color:#fff}
+.ni.active{background:rgba(29,95,212,.3);color:#fff;border:1px solid rgba(29,95,212,.4)}
+.ni-ico{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.ni-badge{margin-left:auto;background:var(--cy);color:var(--dk);border-radius:10px;padding:1px 7px;font-size:9px;font-weight:800}
+.sb-foot{padding:14px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.uc{display:flex;align-items:center;gap:10px}
+.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;color:#fff}
+.un{font-size:12px;font-weight:600;color:#fff}
+.ur{font-size:10px;color:var(--cy)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:var(--hh);background:var(--cd);border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;box-shadow:var(--ss)}
+.tbl-l{display:flex;align-items:center;gap:12px}
+.ham{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--rs);cursor:pointer;color:var(--tm);font-size:16px;transition:background .14s}
+.ham:hover{background:var(--pg)}
+.pg-t{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:var(--th)}
+.tbl-r{display:flex;align-items:center;gap:8px}
+.rp{display:flex;align-items:center;gap:6px;background:var(--pg);border:1px solid var(--br);border-radius:20px;padding:4px 12px 4px 8px;font-size:12px;color:var(--tm);cursor:pointer;transition:background .14s}
+.rp:hover{background:#e4ecf7}
+.rd{width:8px;height:8px;border-radius:50%}
+.content{flex:1;padding:26px;overflow-x:hidden}
+
+/* ─── KPI ─── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:var(--cd);border-radius:var(--rl);padding:20px 22px;box-shadow:var(--ss);border:1px solid var(--br);transition:box-shadow .2s}
+.kpi:hover{box-shadow:var(--sm)}
+.kpi-iw{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:12px}
+.kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--tm);font-weight:600;margin-bottom:5px}
+.kpi-v{font-family:'Sora',sans-serif;font-size:32px;font-weight:800;color:var(--th);line-height:1}
+.kpi-s{font-size:11px;color:var(--ok);margin-top:5px}
+
+/* ─── STATUS LEGEND ─── */
+.stleg{background:#F8FAFD;border:1px solid var(--br);border-radius:var(--rm);padding:14px 18px;margin-bottom:18px}
+.stleg-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tm);margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.stleg-rows{display:flex;gap:20px;flex-wrap:wrap}
+.stleg-row{display:flex;align-items:flex-start;gap:8px;flex:1;min-width:200px}
+
+/* ─── STATUS PILL ─── */
+.sp{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid}
+.sp-ok{background:#E8FBF3;color:#065F46;border-color:#6EE7B7}
+.sp-ip{background:#EBF1FF;color:#1D40AE;border-color:#93C5FD}
+.sp-dr{background:#F8F9FA;color:#475569;border-color:#CBD5E1}
+
+/* ─── PROGRESS BAR ─── */
+.pbw{background:var(--pg);border-radius:99px;height:6px;width:80px;overflow:hidden}
+.pbf{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--bl),var(--cy))}
+
+/* ─── TABLE ─── */
+.tbl-wrap{background:var(--cd);border-radius:var(--rl);border:1px solid var(--br);box-shadow:var(--ss);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{padding:11px 16px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--tm);background:#F5F8FD;border-bottom:1px solid var(--br)}
+tbody tr{border-bottom:1px solid var(--br);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F9FBFE}
+tbody td{padding:12px 16px;font-size:13px;color:var(--tb)}
+.tacts{display:flex;gap:4px}
+.tact{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--tm);transition:background .13s}
+.tact:hover{background:var(--pg)}
+.tact.del:hover{background:#FEF2F2;color:var(--dn)}
+.pag{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--br)}
+.pag-i{font-size:11px;color:var(--tm)}
+.pag-b{display:flex;gap:3px}
+.pbn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--br);cursor:pointer;font-size:12px;color:var(--tm);background:#fff}
+.pbn.on{background:var(--bl);color:#fff;border-color:var(--bl)}
+.pbn:hover:not(.on){background:var(--pg)}
+
+/* ─── BADGE ─── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.b-ok{background:#E8FBF3;color:#065F46}
+.b-ip{background:#EBF1FF;color:#1D40AE}
+.b-dr{background:#F1F5F9;color:#475569}
+.b-pu{background:#F5F3FF;color:#5B21B6}
+.b-wn{background:#FFFBEB;color:#92400E}
+
+/* ─── SECTION HEADER ─── */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sh h3{font-size:15px;font-weight:700}
+.sh-acts{display:flex;gap:8px}
+.sf-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:200px;max-width:320px}
+.sw input{padding-left:34px}
+.si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tl);font-size:13px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--br);background:var(--cd);color:var(--tm);transition:all .14s}
+.chip.on,.chip:hover{border-color:var(--bl);color:var(--bl);background:rgba(29,95,212,.06)}
+
+/* ─── PAGE HEADER ─── */
+.ph{margin-bottom:20px}
+.ph h2{font-size:20px;font-weight:700}
+.ph p{font-size:12px;color:var(--tm);margin-top:3px}
+
+/* ─── CARDS ─── */
+.fcard{background:var(--cd);border-radius:var(--rl);padding:24px;border:1px solid var(--br);box-shadow:var(--ss);margin-bottom:14px}
+.fcard h4{font-size:13px;font-weight:700;padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid var(--br)}
+.fcard-hdr{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid var(--br)}
+.fcard-hdr h4{font-size:13px;font-weight:700}
+.sub-box{background:#F6F9FD;border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.sblbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--tm);margin-bottom:10px}
+.divider{height:1px;background:var(--br);margin:16px 0}
+.sec-div{font-size:10px;font-weight:700;color:var(--tm);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 10px}
+
+/* ─── INFO BANNERS ─── */
+.ib{padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.ib-ai{background:#F5F3FF;border:1px solid #DDD6FE;color:#5B21B6}
+.ib-w{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E}
+.ib-b{background:#EBF1FF;border:1px solid #BFDBFE;color:#1E40AF}
+.ib-ok{background:#E8FBF3;border:1px solid #6EE7B7;color:#065F46}
+.ib-lock{background:#F5F8FD;border:1px solid #CBD5E1;color:#475569}
+
+/* ─── WIZARD ─── */
+.wiz-card{background:var(--cd);border-radius:var(--rl);padding:20px 26px;margin-bottom:18px;border:1px solid var(--br);box-shadow:var(--ss)}
+.wiz-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.wiz-meta h3{font-size:15px;font-weight:700}
+.wiz-meta p{font-size:11px;color:var(--tm);margin-top:2px}
+.wiz-prog{font-size:11px;color:var(--bl);font-weight:600;margin-top:2px}
+.steps-wrap{overflow-x:auto;padding-bottom:4px}
+.steps{display:flex;align-items:flex-start;min-width:600px}
+.step{display:flex;align-items:flex-start;flex:1}
+.step-b{display:flex;flex-direction:column;align-items:center;gap:5px}
+.sn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:11px;font-weight:700;transition:all .2s;flex-shrink:0}
+.sn-done{background:var(--ok);color:#fff}
+.sn-act{background:var(--bl);color:#fff;box-shadow:0 0 0 5px rgba(29,95,212,.16)}
+.sn-pend{background:var(--pg);color:var(--tl);border:2px solid var(--br)}
+.slbl{font-size:9px;font-weight:500;color:var(--tm);text-align:center;max-width:60px;line-height:1.3}
+.slbl.act{color:var(--bl);font-weight:700}
+.sline{flex:1;height:2px;background:var(--br);margin:15px 3px 0;border-radius:2px;min-width:20px}
+.sline.done{background:var(--ok)}
+
+/* ─── UPLOAD ─── */
+.uzone{border:2px dashed var(--br);border-radius:var(--rm);padding:24px;text-align:center;cursor:pointer;transition:all .2s}
+.uzone:hover{border-color:var(--bl);background:rgba(29,95,212,.03)}
+.uzone p{font-size:12px;color:var(--tm);margin-top:6px}
+.browse{color:var(--bl);font-weight:600}
+.ufile{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;background:#EEF5FF;border-radius:8px;font-size:12px}
+
+/* ─── RICH TEXT ─── */
+.rt-bar{display:flex;gap:3px;padding:5px 8px;border:1.5px solid var(--br);border-bottom:none;border-radius:var(--rs) var(--rs) 0 0;background:#F5F8FD}
+.rt-bar button{padding:3px 8px;border:1px solid var(--br);border-radius:4px;background:#fff;font-size:11px;cursor:pointer;color:var(--tm);font-family:'DM Sans',sans-serif}
+.rt-bar button:hover{background:var(--pg)}
+.rt-ta{border-radius:0 0 var(--rs) var(--rs)!important}
+
+/* ─── ACTIVITY TABLE ─── */
+.atw{overflow-x:auto}
+.atw table{min-width:900px}
+.atw td .fc{font-size:12px;padding:5px 8px}
+.atw td textarea.fc{min-height:44px}
+.add-row{display:flex;align-items:center;gap:6px;padding:10px 15px;color:var(--bl);font-size:12px;font-weight:600;cursor:pointer;border-top:1px solid var(--br)}
+.add-row:hover{background:rgba(29,95,212,.04)}
+
+/* ─── ACCORDION ─── */
+.acc{border:1px solid var(--br);border-radius:var(--rm);margin-bottom:9px;overflow:hidden}
+.acc-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;background:#F6F9FD;transition:background .13s;user-select:none}
+.acc-hdr:hover{background:#EEF3FB}
+.acc-hdr h5{font-size:12px;font-weight:700}
+.acc-body{padding:14px 16px;display:none}
+.acc-body.open{display:block}
+
+/* ─── SUMMARY METRICS ─── */
+.smets{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.scard{background:linear-gradient(135deg,var(--dk) 0%,var(--nv) 100%);border-radius:var(--rl);padding:20px;position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;width:80px;height:80px;border-radius:50%;background:rgba(0,194,224,.08);top:-20px;right:-20px}
+.sc-l{font-size:9px;text-transform:uppercase;letter-spacing:.9px;color:rgba(255,255,255,.45);margin-bottom:8px}
+.sc-v{font-family:'Sora',sans-serif;font-size:24px;font-weight:800;color:var(--cy)}
+.sc-s{font-size:10px;color:rgba(255,255,255,.38);margin-top:4px}
+
+/* ─── FORM FOOTER ─── */
+.ff{display:flex;justify-content:space-between;align-items:center;padding-top:14px;gap:10px;flex-wrap:wrap}
+.ff-r{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ─── COMPLETE BAR ─── */
+.cb{display:flex;align-items:center;justify-content:space-between;background:var(--cd);border-radius:var(--rl);padding:18px 22px;border:1px solid var(--br);box-shadow:var(--ss);margin-bottom:14px;gap:14px;flex-wrap:wrap}
+.cb h4{font-size:13px;font-weight:700;margin-bottom:3px}
+.cb p{font-size:12px;color:var(--tm)}
+
+/* ─── MODAL ─── */
+.mo{position:fixed;inset:0;background:rgba(7,17,43,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.md{background:#fff;border-radius:var(--rl);width:100%;max-width:560px;padding:28px;max-height:90vh;overflow-y:auto;box-shadow:var(--sl);animation:mdin .22s cubic-bezier(.34,1.56,.64,1)}
+@keyframes mdin{from{transform:scale(.95);opacity:0}}
+.md-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.md-hdr h3{font-size:17px;font-weight:700}
+.md-x{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;color:var(--tm);font-size:16px;transition:background .13s}
+.md-x:hover{background:var(--pg)}
+.md-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:22px;right:22px;padding:11px 18px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:8px;z-index:9999;box-shadow:var(--sl);animation:tin .28s ease;max-width:340px}
+.toast-ok{background:#0A1628;color:#fff}
+.toast-err{background:#7F1D1D;color:#fff}
+.toast-w{background:#78350F;color:#fff}
+@keyframes tin{from{transform:translateY(14px);opacity:0}}
+
+/* ─── AI LOADER ─── */
+.ai-ld{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(92,79,214,.06),rgba(0,194,224,.06));border:1px solid rgba(92,79,214,.15);border-radius:var(--rm);font-size:13px;color:#5C4FD6;font-weight:500;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:15px;height:15px;border:2px solid rgba(92,79,214,.2);border-top-color:#5C4FD6;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+
+/* ─── REPORTS GRID ─── */
+.rpt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.rpt-card{background:var(--cd);border-radius:var(--rl);border:1px solid var(--br);box-shadow:var(--ss);padding:20px;cursor:pointer;transition:all .18s}
+.rpt-card:hover{transform:translateY(-2px);box-shadow:var(--sm);border-color:rgba(29,95,212,.3)}
+.rpt-ico{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:13px}
+.rpt-tit{font-family:'Sora',sans-serif;font-size:13px;font-weight:700;margin-bottom:5px}
+.rpt-desc{font-size:11px;color:var(--tm);line-height:1.55}
+.rpt-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--br)}
+.rpt-cnt{font-size:11px;color:var(--tm)}
+.rpt-cnt strong{color:var(--th)}
+
+/* ─── ADMIN PANEL ─── */
+.adm-tabs{display:flex;border-bottom:2px solid var(--br);margin-bottom:22px}
+.atab{padding:10px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--tm);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.atab:hover{color:var(--th)}
+.atab.on{color:var(--bl);border-bottom-color:var(--bl)}
+.stat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--cd);border-radius:var(--rm);border:1px solid var(--br);padding:16px 18px;box-shadow:var(--ss)}
+.stat-n{font-family:'Sora',sans-serif;font-size:28px;font-weight:800;color:var(--th)}
+.stat-l{font-size:11px;color:var(--tm);margin-top:2px}
+.uc-list{display:flex;flex-direction:column;gap:10px}
+.uc-card{background:var(--cd);border-radius:var(--rm);border:1px solid var(--br);padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:var(--ss);transition:box-shadow .2s}
+.uc-card:hover{box-shadow:var(--sm)}
+.uc-info{flex:1;min-width:0}
+.uc-nm{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uc-em{font-size:11px;color:var(--tm)}
+.uc-acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rt{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.rt-a{background:#FEF2F2;color:#991B1B}
+.rt-p{background:#EBF1FF;color:#1D40AE}
+.rt-v{background:#E8FBF3;color:#065F46}
+
+/* ─── PERMISSIONS MATRIX ─── */
+.perm-wrap{background:var(--cd);border-radius:var(--rl);border:1px solid var(--br);box-shadow:var(--ss);overflow:hidden;margin-bottom:14px}
+.perm-hdr{display:grid;grid-template-columns:1fr 120px 140px 100px;background:#F5F8FD;border-bottom:1px solid var(--br)}
+.perm-hdr-cell{padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--tm);text-align:center}
+.perm-hdr-cell:first-child{text-align:left}
+.perm-row{display:grid;grid-template-columns:1fr 120px 140px 100px;border-bottom:1px solid var(--br);align-items:center;transition:background .1s}
+.perm-row:last-child{border-bottom:none}
+.perm-row:hover{background:#F9FBFE}
+.perm-cell{padding:12px 16px;text-align:center}
+.perm-cell:first-child{text-align:left}
+.perm-nm{font-size:13px;font-weight:600}
+.perm-desc{font-size:11px;color:var(--tm);margin-top:1px}
+.toggle{width:38px;height:20px;border-radius:20px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;display:inline-block}
+.toggle.on{background:var(--bl)}
+.toggle.off{background:var(--br)}
+.toggle.locked{background:var(--ok);cursor:not-allowed;opacity:.85}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.toggle.on::after,.toggle.locked::after{left:20px}
+.role-def-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.role-def{border-radius:var(--rm);padding:16px}
+.role-def h5{font-size:13px;font-weight:700;margin-bottom:6px}
+.role-def p{font-size:12px;color:var(--tb);line-height:1.55}
+
+/* ─── ACTIVITY LOG ─── */
+.act-log{background:var(--cd);border-radius:var(--rl);border:1px solid var(--br);box-shadow:var(--ss);overflow:hidden}
+.log-row{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--br);transition:background .1s}
+.log-row:last-child{border-bottom:none}
+.log-row:hover{background:#F9FBFE}
+.log-ico{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.log-msg{flex:1;font-size:12px;line-height:1.5}
+.log-time{font-size:10px;color:var(--tl);white-space:nowrap;margin-left:8px}
+
+/* ─── LOGIN ─── */
+.lp{min-height:100vh;display:flex}
+.ll{width:44%;background:linear-gradient(150deg,var(--dk),var(--nv));display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 48px;position:relative;overflow:hidden}
+.ll::before{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(0,194,224,.14),transparent 68%);top:-120px;right:-120px}
+.ll::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(29,95,212,.22),transparent 70%);bottom:-60px;left:-60px}
+.lb{text-align:center;z-index:1}
+.ab{font-family:'Sora',sans-serif;font-size:54px;font-weight:800;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:8px}
+.ab span{color:var(--cy)}
+.as{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:14px}
+.at{font-size:13px;color:rgba(255,255,255,.58);max-width:280px;line-height:1.7}
+.l-pills{margin-top:44px;z-index:1;display:flex;flex-direction:column;gap:9px}
+.pill{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:40px;padding:8px 18px;color:rgba(255,255,255,.75);font-size:12px;display:flex;align-items:center;gap:8px}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--cy);flex-shrink:0}
+.lr{flex:1;display:flex;align-items:center;justify-content:center;padding:40px}
+.lc{width:100%;max-width:400px}
+.lc h2{font-size:22px;font-weight:700;margin-bottom:4px}
+.lc .sub{font-size:13px;color:var(--tm);margin-bottom:26px}
+.demo-box{background:#F0F7FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 14px;margin-top:14px}
+.demo-box h6{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--bl);margin-bottom:8px}
+.demo-row{display:flex;justify-content:space-between;font-size:11px;color:var(--tm);padding:2px 0}
+.demo-row strong{color:var(--th)}
+
+/* ─── HELPERS ─── */
+.bg-b{background:rgba(29,95,212,.1)}
+.bg-g{background:rgba(10,180,114,.1)}
+.bg-w{background:rgba(240,165,0,.1)}
+.bg-c{background:rgba(0,194,224,.1)}
+.bg-p{background:rgba(124,58,237,.1)}
+.shdiv{display:flex;align-items:center;gap:10px;margin:22px 0 14px}
+.shdiv h4{font-size:14px;font-weight:700;white-space:nowrap}
+.shdiv::after{content:'';flex:1;height:1px;background:var(--br)}
+.hidden{display:none!important}
+
+@media(max-width:900px){.kpi-row,.rpt-grid{grid-template-columns:repeat(2,1fr)}.fr{grid-template-columns:1fr}.smets{grid-template-columns:repeat(2,1fr)}.ll{display:none}.lr{padding:24px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
+const LOGO = 'https://static.wixstatic.com/media/ab512a_4e66ae7e0b3942039ba49f13947a295e~mv2.png';
+
+const CURRENCIES = [
+  {code:'INR',sym:'₹',lbl:'INR — ₹ Indian Rupee',flag:'🇮🇳'},
+  {code:'USD',sym:'$',lbl:'USD — $ US Dollar',flag:'🇺🇸'},
+  {code:'EUR',sym:'€',lbl:'EUR — € Euro',flag:'🇪🇺'},
+  {code:'GBP',sym:'£',lbl:'GBP — £ British Pound',flag:'🇬🇧'},
+  {code:'AED',sym:'د.إ',lbl:'AED — د.إ UAE Dirham',flag:'🇦🇪'},
+  {code:'SGD',sym:'S$',lbl:'SGD — S$ Singapore Dollar',flag:'🇸🇬'},
+  {code:'AUD',sym:'A$',lbl:'AUD — A$ Australian Dollar',flag:'🇦🇺'},
+  {code:'JPY',sym:'¥',lbl:'JPY — ¥ Japanese Yen',flag:'🇯🇵'},
+  {code:'MYR',sym:'RM',lbl:'MYR — RM Malaysian Ringgit',flag:'🇲🇾'},
+  {code:'ZAR',sym:'R',lbl:'ZAR — R South African Rand',flag:'🇿🇦'}
+];
+
+const INDUSTRIES = ['Automotive & Transportation','Banking & Financial Services','Consumer Goods & Retail','Energy & Utilities','Food & Beverage','Government & Public Sector','Healthcare & Pharmaceuticals','Information Technology (IT)','Insurance','Logistics & Supply Chain','Manufacturing','Marine & Shipping','Mining & Metals','Professional Services','Real Estate & Property','Telecommunication','Transportation & Warehousing'];
+
+const BIZ_FN = ['Strategy & Leadership','Finance','Human Resources (HR)','Marketing','Sales','Customer Service','Operations','Supply Chain / Logistics','IT / Technology','Legal & Compliance','R&D / Product Development','Admin / Facilities','Procurement','Quality Assurance'];
+
+const PROC_MAP = {
+  'Finance':['Accounts Payable','Accounts Receivable','Budgeting','Accounting','Treasury','Tax'],
+  'Human Resources (HR)':['Recruitment','Onboarding','Payroll','Training & Development'],
+  'Operations':['Production Planning','Process Optimization','Quality Control'],
+  'Supply Chain / Logistics':['Procurement','Inventory Management','Warehousing','Delivery'],
+  'Customer Service':['Customer Support','Feedback & Issue Handling','Escalation Management'],
+  'IT / Technology':['System Support','Infrastructure Management','Cybersecurity'],
+  'Legal & Compliance':['Contract Management','Risk & Compliance'],
+  'Marketing':['Market Research','Campaign Management'],
+  'Sales':['Lead Management','Opportunity Management'],
+  'Quality Assurance':['Quality Control','Continuous Improvement']
+};
+
+const PERMS = [
+  {nm:'Initiate Process Discovery',desc:'Create new assessment and fill all 7 wizard steps',admin:true,po:true,vw:false},
+  {nm:'Edit Assessments',desc:'Modify in-progress assessments before completion',admin:true,po:true,vw:false},
+  {nm:'View All Assessments',desc:'View all assessments on the dashboard and wizard',admin:true,po:true,vw:true},
+  {nm:'Download Reports (PDF)',desc:'Export completed assessment reports as PDF',admin:true,po:true,vw:true},
+  {nm:'Client Management',desc:'Add, edit, and delete clients in client master',admin:true,po:false,vw:false},
+  {nm:'User Management',desc:'Invite users, assign roles, deactivate accounts',admin:true,po:false,vw:false},
+  {nm:'Role & Permission Config',desc:'Modify role permissions across the platform',admin:true,po:false,vw:false},
+  {nm:'Mark Assessment as Complete',desc:'Lock an assessment — irreversible action',admin:true,po:true,vw:false},
+  {nm:'Access Admin Panel',desc:'View and configure admin panel settings',admin:true,po:false,vw:false}
+];
+
+const DB = {
+  clients: [
+    {id:1,co:'Ventora Pvt Ltd',ind:'Manufacturing',addr:'201 MG Road, Bangalore',contact:{name:'Sandeep Rao',email:'sandeep@ventora.com',ph:'9876543210',role:'CTO'},on:'12 Jan 2025',count:2},
+    {id:2,co:'NovaTech Systems',ind:'Banking & Financial Services',addr:'45 Fort Road, Mumbai',contact:{name:'Priya Menon',email:'priya@novatech.in',ph:'9812345678',role:'VP Operations'},on:'01 Feb 2025',count:1},
+    {id:3,co:'GreenLeaf Foods',ind:'Food & Beverage',addr:'89 Anna Salai, Chennai',contact:{name:'Karthik Rajan',email:'karthik@greenleaf.com',ph:'9900112233',role:'COO'},on:'18 Mar 2025',count:1},
+    {id:4,co:'Horizon Insurance',ind:'Insurance',addr:'12 Civil Lines, Delhi',contact:{name:'Aditi Sharma',email:'aditi@horizonins.com',ph:'9955667788',role:'Head of Ops'},on:'05 Apr 2025',count:0}
+  ],
+  assessments: [
+    {id:1,client:'Ventora Pvt Ltd',area:'Finance',process:'AP Processing',date:'14 Apr 2025',status:'In Progress',pct:60,step:4,currency:'INR',sym:'₹'},
+    {id:2,client:'Ventora Pvt Ltd',area:'Human Resources (HR)',process:'Payroll Processing',date:'01 Mar 2025',status:'Completed',pct:100,step:7,currency:'INR',sym:'₹'},
+    {id:3,client:'NovaTech Systems',area:'Operations',process:'KYC Process',date:'22 Mar 2025',status:'In Progress',pct:40,step:3,currency:'USD',sym:'$'},
+    {id:4,client:'GreenLeaf Foods',area:'Supply Chain / Logistics',process:'Procurement',date:'10 Apr 2025',status:'Draft',pct:5,step:1,currency:'INR',sym:'₹'},
+    {id:5,client:'Ventora Pvt Ltd',area:'Customer Service',process:'Invoice Dispute Resolution',date:'05 Apr 2025',status:'In Progress',pct:28,step:2,currency:'INR',sym:'₹'}
+  ],
+  users: [
+    {id:1,name:'Murali D',email:'admin@senzcraft.com',role:'Admin',status:'Active',last:'Just now',av:'M',clr:'#1D5FD4'},
+    {id:2,name:'Deboleena K',email:'process@senzcraft.com',role:'Process Owner',status:'Active',last:'2 hrs ago',av:'D',clr:'#7C3AED'},
+    {id:3,name:'Ravi Kumar',email:'ravi@senzcraft.com',role:'Process Owner',status:'Active',last:'Yesterday',av:'R',clr:'#0AB472'},
+    {id:4,name:'Ananya Iyer',email:'viewer@senzcraft.com',role:'Viewer',status:'Active',last:'3 days ago',av:'A',clr:'#F0A500'},
+    {id:5,name:'Preethi S',email:'preethi@senzcraft.com',role:'Viewer',status:'Inactive',last:'2 weeks ago',av:'P',clr:'#E03A3A'}
+  ],
+  permState: {po:[true,true,true,true,false,false,false,true,false], vw:[false,false,true,true,false,false,false,false,false]},
+  nextCid:5, nextAid:6, nextUid:6
+};
+
+const ROLE_CLR = {'Admin':'#E03A3A','Process Owner':'#1D5FD4','Viewer':'#0AB472'};
+
+const S = {
+  screen:'login', role:'Admin', sidebar:false,
+  step:1, filter:'All', search:'',
+  modal:null, modalData:{},
+  adminTab:'users', rptTab:'all',
+  acc:{goals:true,signals:false,decisions:false,actions:false},
+  legendOpen:true,
+  currCode:'INR', currSym:'₹',
+  // new forms
+  nf:{client:'',fn:'Finance',area:'Accounts Payable',currency:'INR'},
+  nc:{co:'',ind:'',addr:'',cn:'',ce:'',cp:'',cr:''},
+  nu:{name:'',email:'',role:'Process Owner'}
+};
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+const go = (screen, extra) => { S.screen = screen; if(extra) Object.assign(S, extra); draw(); };
+
+function toast(msg, type='ok') {
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  const ico = {ok:'✅',err:'❌',w:'⚠️'}[type]||'✅';
+  t.innerHTML = `<span>${ico}</span><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3400);
+}
+
+function logo(h, sty='') {
+  return `<img src="${LOGO}" height="${h}" style="${sty}" onerror="this.outerHTML='<span style=\\'font-family:Sora;font-weight:800;color:inherit;font-size:${Math.round(h*.55)}px\\'>Senz<span style=\\'color:var(--cy)\\'>craft</span></span>'" alt="SenzCraft">`;
+}
+
+function spill(s) {
+  const m={'Completed':{c:'sp-ok',i:'✓'},'In Progress':{c:'sp-ip',i:'◉'},'Draft':{c:'sp-dr',i:'○'}};
+  const x=m[s]||m['Draft'];
+  const tips={'Completed':'All 7 steps complete. Report ready for download.','In Progress':'Step 1 submitted. Wizard is partially filled — resumable.','Draft':'Initiated but Step 1 not yet submitted.'};
+  return `<span class="sp ${x.c}" title="${tips[s]||''}">${x.i} ${s}</span>`;
+}
+
+function pb(p) {
+  return `<div style="display:flex;align-items:center;gap:8px"><div class="pbw"><div class="pbf" style="width:${p}%"></div></div><span style="font-size:11px;color:var(--tm);font-weight:600">${p}%</span></div>`;
+}
+
+function fmtDate() {
+  const d=new Date(); const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${String(d.getDate()).padStart(2,'0')} ${M[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function currSym() {
+  return CURRENCIES.find(c=>c.code===S.currCode)?.sym || '₹';
+}
+
+function cycleRole() {
+  const r=['Admin','Process Owner','Viewer'];
+  S.role = r[(r.indexOf(S.role)+1)%3]; draw();
+}
+
+/* ═══════════════════════════════════════════
+   LOGIN
+═══════════════════════════════════════════ */
+function loginHTML() {
+  return `<div class="lp">
+    <div class="ll">
+      <div class="lb">
+        ${logo(42,'filter:brightness(0) invert(1);margin:0 auto 20px')}
+        <div class="ab">Au<span>RA</span></div>
+        <div class="as">AI Discovery Framework</div>
+        <p class="at">Assess, understand, and recommend AI automation for your business processes — powered by SenzCraft.</p>
+      </div>
+      <div class="l-pills">
+        ${['AI-Powered Process Discovery','7-Step Progressive Assessment','GSDA Evaluation Framework','Multi-Currency ROI Scoring'].map(p=>`<div class="pill"><div class="pdot"></div>${p}</div>`).join('')}
+      </div>
+    </div>
+    <div class="lr"><div class="lc">
+      <h2>Welcome back 👋</h2>
+      <p class="sub">Sign in to your AuRA workspace</p>
+      <div class="fg"><label>Email Address</label><input type="email" class="fc" value="admin@senzcraft.com"></div>
+      <div class="fg"><label>Password</label><input type="password" class="fc" value="••••••••"></div>
+      <div class="fg">
+        <label>Sign in as <span style="color:var(--tl);text-transform:none;letter-spacing:0;font-size:10px">(Demo role selector)</span></label>
+        <select class="fc" onchange="S.role=this.value">
+          <option selected>Admin</option><option>Process Owner</option><option>Viewer</option>
+        </select>
+      </div>
+      <div style="height:1px;background:var(--br);margin:18px 0"></div>
+      <button class="btn bp bfl" onclick="go('dashboard')">Sign In → AuRA</button>
+      <div class="demo-box">
+        <h6>Demo Credentials</h6>
+        <div class="demo-row"><strong>Admin:</strong><span>admin@senzcraft.com / Admin@123</span></div>
+        <div class="demo-row"><strong>Process Owner:</strong><span>process@senzcraft.com / Process@123</span></div>
+        <div class="demo-row"><strong>Viewer:</strong><span>viewer@senzcraft.com / Viewer@123</span></div>
+      </div>
+      <p style="text-align:center;font-size:11px;color:var(--tl);margin-top:14px">Powered by ${logo(13,'vertical-align:middle;margin:0 3px')} SenzCraft Technologies</p>
+    </div></div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   SHELL
+═══════════════════════════════════════════ */
+function shell(title, body) {
+  const NAV = [
+    {id:'dashboard',ico:'⊞',lbl:'Dashboard',roles:['Admin','Process Owner','Viewer']},
+    {id:'discovery',ico:'🔍',lbl:'Process Discovery',roles:['Admin','Process Owner']},
+    {id:'clients',  ico:'🏢',lbl:'Client Management',roles:['Admin']},
+    {id:'reports',  ico:'📊',lbl:'Reports',roles:['Admin','Process Owner','Viewer']},
+    {id:'admin',    ico:'⚙️',lbl:'Admin Panel',roles:['Admin'],badge:'Admin'}
+  ];
+  const vis = NAV.filter(n=>n.roles.includes(S.role));
+  const sw = S.sidebar ? 'var(--sbc)' : 'var(--sbw)';
+  return `<div class="app">
+    <aside class="sidebar ${S.sidebar?'col':''}">
+      <div class="sb-logo">
+        ${logo(26,'filter:brightness(0) invert(1);flex-shrink:0')}
+        ${!S.sidebar?`<div class="lt"><div class="an">Au<span>RA</span></div><div class="at">AI Discovery</div></div>`:''}
+      </div>
+      <nav class="sb-nav">
+        ${!S.sidebar?'<div class="nav-sec">NAVIGATION</div>':''}
+        ${vis.map(n=>`<div class="ni ${S.screen===n.id?'active':''}" onclick="go('${n.id}')">
+          <span class="ni-ico">${n.ico}</span>
+          ${!S.sidebar?`<span style="flex:1">${n.lbl}</span>${n.badge?`<span class="ni-badge">${n.badge}</span>`:''}`:''}</div>`).join('')}
+      </nav>
+      <div class="sb-foot">
+        <div class="uc">
+          <div class="av" style="background:${ROLE_CLR[S.role]}">M</div>
+          ${!S.sidebar?`<div><div class="un">Murali D.</div><div class="ur">${S.role}</div></div>`:''}
+        </div>
+      </div>
+    </aside>
+    <div class="main" style="margin-left:${sw}">
+      <header class="topbar">
+        <div class="tbl-l">
+          <div class="ham" onclick="S.sidebar=!S.sidebar;draw()">☰</div>
+          <span class="pg-t">${title}</span>
+        </div>
+        <div class="tbl-r">
+          <div class="rp" onclick="cycleRole()">
+            <div class="rd" style="background:${ROLE_CLR[S.role]}"></div>${S.role}<span style="color:var(--tl)">▾</span>
+          </div>
+          <button class="btn bs bsm" onclick="go('login')">Sign Out</button>
+        </div>
+      </header>
+      <main class="content">${body}</main>
+    </div>
+  </div>${S.modal?modalHTML():''}`;
+}
+
+/* ═══════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════ */
+function modalHTML() {
+  const m = S.modal;
+  if(m==='addClient')  return addClientMd();
+  if(m==='editClient') return editClientMd();
+  if(m==='newAssess')  return newAssessMd();
+  if(m==='addUser')    return addUserMd();
+  if(m==='editUser')   return editUserMd();
+  if(m==='confirm')    return confirmMd();
+  return '';
+}
+
+function addClientMd() {
+  return `<div class="mo" onclick="if(event.target===this){S.modal=null;draw()}"><div class="md">
+    <div class="md-hdr"><h3>➕ Add New Client</h3><div class="md-x" onclick="S.modal=null;draw()">✕</div></div>
+    <div class="fg"><label class="req">Company Name</label><input id="nc_co" type="text" class="fc" placeholder="e.g. Ventora Pvt Ltd"></div>
+    <div class="fg"><label>Address</label><input id="nc_addr" type="text" class="fc" placeholder="Full address"></div>
+    <div class="fg"><label class="req">Industry</label>
+      <select id="nc_ind" class="fc"><option value="">— Select Industry —</option>${INDUSTRIES.map(i=>`<option>${i}</option>`).join('')}</select></div>
+    <div class="sub-box">
+      <div class="sblbl">Client Contact</div>
+      <div class="fr"><div class="fg" style="margin-bottom:0"><label>Name</label><input id="nc_cn" type="text" class="fc"></div>
+        <div class="fg" style="margin-bottom:0"><label>Role / Title</label><input id="nc_cr" type="text" class="fc" placeholder="e.g. CTO"></div></div>
+      <div class="fr" style="margin-top:12px">
+        <div class="fg" style="margin-bottom:0"><label>Email</label><input id="nc_ce" type="email" class="fc"></div>
+        <div class="fg" style="margin-bottom:0"><label>Phone</label><input id="nc_cp" type="tel" class="fc"></div>
+      </div>
+    </div>
+    <div class="md-footer">
+      <button class="btn bs" onclick="S.modal=null;draw()">Cancel</button>
+      <button class="btn bp" onclick="saveClient()">💾 Save Client</button>
+    </div>
+  </div></div>`;
+}
+
+function saveClient() {
+  const co = document.getElementById('nc_co').value.trim();
+  const ind = document.getElementById('nc_ind').value;
+  if(!co) { toast('Company name is required','w'); return; }
+  if(!ind) { toast('Please select an industry','w'); return; }
+  DB.clients.push({id:DB.nextCid++, co, ind,
+    addr: document.getElementById('nc_addr').value,
+    contact:{name:document.getElementById('nc_cn').value, email:document.getElementById('nc_ce').value, ph:document.getElementById('nc_cp').value, role:document.getElementById('nc_cr').value},
+    on: fmtDate(), count: 0});
+  S.modal=null; draw(); toast(`"${co}" added to Client Master!`);
+}
+
+function editClientMd() {
+  const c = DB.clients.find(x=>x.id===S.editCid); if(!c) return '';
+  return `<div class="mo" onclick="if(event.target===this){S.modal=null;draw()}"><div class="md">
+    <div class="md-hdr"><h3>✏️ Edit Client — ${c.co}</h3><div class="md-x" onclick="S.modal=null;draw()">✕</div></div>
+    <div class="fg"><label class="req">Company Name</label><input id="ec_co" type="text" class="fc" value="${c.co}"></div>
+    <div class="fg"><label>Address</label><input id="ec_addr" type="text" class="fc" value="${c.addr||''}"></div>
+    <div class="fg"><label class="req">Industry</label>
+      <select id="ec_ind" class="fc">${INDUSTRIES.map(i=>`<option ${c.ind===i?'selected':''}>${i}</option>`).join('')}</select></div>
+    <div class="sub-box">
+      <div class="sblbl">Client Contact</div>
+      <div class="fr">
+        <div class="fg" style="margin-bottom:0"><label>Name</label><input id="ec_cn" type="text" class="fc" value="${c.contact.name||''}"></div>
+        <div class="fg" style="margin-bottom:0"><label>Role / Title</label><input id="ec_cr" type="text" class="fc" value="${c.contact.role||''}"></div>
+      </div>
+      <div class="fr" style="margin-top:12px">
+        <div class="fg" style="margin-bottom:0"><label>Email</label><input id="ec_ce" type="email" class="fc" value="${c.contact.email||''}"></div>
+        <div class="fg" style="margin-bottom:0"><label>Phone</label><input id="ec_cp" type="tel" class="fc" value="${c.contact.ph||''}"></div>
+      </div>
+    </div>
+    <div class="md-footer">
+      <button class="btn bs" onclick="S.modal=null;draw()">Cancel</button>
+      <button class="btn bp" onclick="updateClient(${c.id})">💾 Update Client</button>
+    </div>
+  </div></div>`;
+}
+
+function updateClient(id) {
+  const c = DB.clients.find(x=>x.id===id); if(!c) return;
+  c.co   = document.getElementById('ec_co').value.trim();
+  c.ind  = document.getElementById('ec_ind').value;
+  c.addr = document.getElementById('ec_addr').value;
+  c.contact.name  = document.getElementById('ec_cn').value;
+  c.contact.role  = document.getElementById('ec_cr').value;
+  c.contact.email = document.getElementById('ec_ce').value;
+  c.contact.ph    = document.getElementById('ec_cp').value;
+  S.modal=null; draw(); toast(`Client "${c.co}" updated successfully!`);
+}
+
+function deleteClient(id) {
+  const c = DB.clients.find(x=>x.id===id); if(!c) return;
+  if(c.count > 0) { toast(`Cannot delete — "${c.co}" has ${c.count} active assessment(s)`,'w'); return; }
+  S.modal='confirm';
+  S.modalData={
+    title:'Delete Client?',
+    msg:`"${c.co}" will be permanently removed from the client master. This cannot be undone.`,
+    btnCls:'bdn', btnLbl:'🗑 Delete',
+    action:`DB.clients=DB.clients.filter(x=>x.id!==${id});draw();toast('Client deleted successfully','ok')`
+  };
+  draw();
+}
+
+function newAssessMd() {
+  const clientOpts = DB.clients.map(c=>`<option>${c.co}</option>`).join('');
+  const areas = PROC_MAP[S.nf.fn]||['General'];
+  const curr = S.nf.currency||'INR';
+  return `<div class="mo" onclick="if(event.target===this){S.modal=null;draw()}"><div class="md">
+    <div class="md-hdr"><h3>⚡ Initiate Process Discovery</h3><div class="md-x" onclick="S.modal=null;draw()">✕</div></div>
+    <div class="ib ib-b">🛈 A new <strong>Draft</strong> assessment will be created. It moves to <strong>In Progress</strong> after you submit Step 1.</div>
+    <div class="fg"><label class="req">Select Client</label>
+      <select id="nf_cl" class="fc"><option value="">— Select Client —</option>${clientOpts}</select></div>
+    <div class="fr">
+      <div class="fg"><label class="req">Business Function</label>
+        <select id="nf_fn" class="fc" onchange="S.nf.fn=this.value;draw()">
+          ${BIZ_FN.map(b=>`<option ${S.nf.fn===b?'selected':''}>${b}</option>`).join('')}
+        </select></div>
+      <div class="fg"><label class="req">Process Area</label>
+        <select id="nf_ar" class="fc">${areas.map(a=>`<option ${S.nf.area===a?'selected':''}>${a}</option>`).join('')}</select></div>
+    </div>
+    <div class="fg">
+      <label class="req">Assessment Currency</label>
+      <div class="curr-select-wrap">
+        <span class="curr-flag">${CURRENCIES.find(c=>c.code===curr)?.flag||'🌐'}</span>
+        <select id="nf_cu" class="fc fc-curr" onchange="S.nf.currency=this.value;draw()">
+          ${CURRENCIES.map(c=>`<option value="${c.code}" ${curr===c.code?'selected':''}>${c.lbl}</option>`).join('')}
+        </select>
+      </div>
+      <p class="curr-hint">💱 All monetary fields throughout this assessment will use <strong>${CURRENCIES.find(c=>c.code===curr)?.sym}</strong> (${curr}).</p>
+    </div>
+    <div class="md-footer">
+      <button class="btn bs" onclick="S.modal=null;draw()">Cancel</button>
+      <button class="btn bp" onclick="startAssess()">🚀 Create & Open Wizard</button>
+    </div>
+  </div></div>`;
+}
+
+function startAssess() {
+  const client = document.getElementById('nf_cl').value;
+  const fn = document.getElementById('nf_fn').value;
+  const area = document.getElementById('nf_ar').value;
+  const currency = document.getElementById('nf_cu').value;
+  if(!client) { toast('Please select a client','w'); return; }
+  const sym = CURRENCIES.find(c=>c.code===currency)?.sym||'₹';
+  const a = {id:DB.nextAid++,client,area:fn,process:`${area} Process`,date:fmtDate(),status:'Draft',pct:5,step:1,currency,sym};
+  DB.assessments.unshift(a);
+  S.currCode = currency; S.currSym = sym;
+  S.modal=null; draw();
+  toast(`Assessment created for "${client}" — ${currency} ${sym}`);
+  setTimeout(()=>go('discovery',{step:1}),800);
+}
+
+function addUserMd() {
+  return `<div class="mo" onclick="if(event.target===this){S.modal=null;draw()}"><div class="md">
+    <div class="md-hdr"><h3>➕ Add New User</h3><div class="md-x" onclick="S.modal=null;draw()">✕</div></div>
+    <div class="fr">
+      <div class="fg"><label class="req">Full Name</label><input id="nu_n" type="text" class="fc" placeholder="e.g. Priya Sharma"></div>
+      <div class="fg"><label class="req">Email Address</label><input id="nu_e" type="email" class="fc" placeholder="user@senzcraft.com"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="req">Role</label>
+        <select id="nu_r" class="fc"><option>Admin</option><option selected>Process Owner</option><option>Viewer</option></select></div>
+      <div class="fg"><label>Status</label>
+        <select id="nu_s" class="fc"><option>Active</option><option>Inactive</option></select></div>
+    </div>
+    <div class="sub-box" style="margin-bottom:14px">
+      <div class="sblbl">Role Preview</div>
+      <p style="font-size:12px;color:var(--tb)"><strong>Process Owner:</strong> Can initiate and manage assessments through all 7 steps, view dashboard and download reports. Cannot manage users or clients.</p>
+    </div>
+    <div class="md-footer">
+      <button class="btn bs" onclick="S.modal=null;draw()">Cancel</button>
+      <button class="btn bp" onclick="saveUser()">💾 Save User</button>
+    </div>
+  </div></div>`;
+}
+
+function saveUser() {
+  const name = document.getElementById('nu_n').value.trim();
+  const email = document.getElementById('nu_e').value.trim();
+  const role = document.getElementById('nu_r').value;
+  if(!name||!email) { toast('Name and email are required','w'); return; }
+  const clrs=['#1D5FD4','#7C3AED','#0AB472','#F0A500','#E03A3A'];
+  DB.users.push({id:DB.nextUid++,name,email,role,status:'Active',last:'Just now',av:name[0].toUpperCase(),clr:clrs[DB.users.length%5]});
+  S.modal=null; draw(); toast(`User "${name}" added as ${role}`);
+}
+
+function editUserMd() {
+  const u = DB.users.find(x=>x.id===S.editUid); if(!u) return '';
+  return `<div class="mo" onclick="if(event.target===this){S.modal=null;draw()}"><div class="md">
+    <div class="md-hdr"><h3>✏️ Edit User — ${u.name}</h3><div class="md-x" onclick="S.modal=null;draw()">✕</div></div>
+    <div class="fr">
+      <div class="fg"><label>Full Name</label><input id="eu_n" type="text" class="fc" value="${u.name}"></div>
+      <div class="fg"><label>Email</label><input id="eu_e" type="email" class="fc" value="${u.email}"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Role</label>
+        <select id="eu_r" class="fc">${['Admin','Process Owner','Viewer'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="fg"><label>Status</label>
+        <select id="eu_s" class="fc"><option ${u.status==='Active'?'selected':''}>Active</option><option ${u.status==='Inactive'?'selected':''}>Inactive</option></select></div>
+    </div>
+    <div class="md-footer">
+      <button class="btn bs" onclick="S.modal=null;draw()">Cancel</button>
+      <button class="btn bp" onclick="updateUser(${u.id})">💾 Update</button>
+    </div>
+  </div></div>`;
+}
+
+function updateUser(id) {
+  const u=DB.users.find(x=>x.id===id); if(!u) return;
+  u.name=document.getElementById('eu_n').value;
+  u.email=document.getElementById('eu_e').value;
+  u.role=document.getElementById('eu_r').value;
+  u.status=document.getElementById('eu_s').value;
+  S.modal=null; draw(); toast(`User "${u.name}" updated`);
+}
+
+function deleteUser(id) {
+  const u = DB.users.find(x=>x.id===id); if(!u) return;
+  if(u.role==='Admin' && DB.users.filter(x=>x.role==='Admin').length === 1) {
+    toast('Cannot remove the last Admin user','w'); return;
+  }
+  S.modal='confirm';
+  S.modalData={
+    title:'Remove User?',
+    msg:`"${u.name}" (${u.email}) will be permanently removed from the platform. They will lose all access immediately.`,
+    btnCls:'bdn', btnLbl:'🗑 Remove User',
+    action:`DB.users=DB.users.filter(x=>x.id!==${id});draw();toast('User removed successfully','ok')`
+  };
+  draw();
+}
+
+function confirmMd() {
+  const d = S.modalData||{};
+  return `<div class="mo"><div class="md" style="max-width:420px">
+    <div class="md-hdr"><h3>${d.title||'Confirm'}</h3></div>
+    <p style="font-size:13px;color:var(--tm);margin-bottom:20px">${d.msg||'Are you sure?'}</p>
+    <div class="md-footer">
+      <button class="btn bs" onclick="S.modal=null;draw()">Cancel</button>
+      <button class="btn ${d.btnCls||'bp'}" onclick="S.modal=null;draw();${d.action||''}">${d.btnLbl||'Confirm'}</button>
+    </div>
+  </div></div>`;
+}
+
+/* ═══════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════ */
+function dashHTML() {
+  const all=DB.assessments;
+  const done=all.filter(a=>a.status==='Completed').length;
+  const wip=all.filter(a=>a.status==='In Progress').length;
+  const rows=all.filter(a=>{
+    const ms=S.filter==='All'||a.status===S.filter;
+    const mq=!S.search||[a.client,a.area,a.process].join(' ').toLowerCase().includes(S.search.toLowerCase());
+    return ms&&mq;
+  });
+  return shell('Dashboard',`
+    <div class="ph"><h2>Dashboard</h2><p>Overview of all AI process discovery assessments</p></div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-iw bg-b">📋</div><div class="kpi-l">Total Assessments</div><div class="kpi-v">${all.length}</div><div class="kpi-s">↑ 2 this month</div></div>
+      <div class="kpi"><div class="kpi-iw bg-g">✅</div><div class="kpi-l">Completed</div><div class="kpi-v">${done}</div><div class="kpi-s">Ready to download</div></div>
+      <div class="kpi"><div class="kpi-iw bg-w">🔄</div><div class="kpi-l">In Progress</div><div class="kpi-v">${wip}</div><div class="kpi-s" style="color:var(--wn)">Active assessments</div></div>
+      <div class="kpi"><div class="kpi-iw bg-c">💰</div><div class="kpi-l">Estimated Value</div><div class="kpi-v" style="font-size:24px">₹2.4Cr</div><div class="kpi-s">AI opportunity value</div></div>
+    </div>
+
+    <div class="stleg">
+      <div class="stleg-t" onclick="S.legendOpen=!S.legendOpen;draw()">
+        <span>📖 Assessment Status Guide</span>
+        <span style="font-size:12px;color:var(--tl)">${S.legendOpen?'▲ Hide':'▼ Show'}</span>
+      </div>
+      ${S.legendOpen?`<div class="stleg-rows" style="margin-top:10px">
+        <div class="stleg-row"><span class="sp sp-dr" style="min-width:90px;flex-shrink:0">○ Draft</span>
+          <div style="font-size:12px"><strong>Wizard initiated, Step 1 not yet submitted.</strong> Record exists in the system but no process details saved. No AI analysis has been triggered yet.</div></div>
+        <div class="stleg-row"><span class="sp sp-ip" style="min-width:90px;flex-shrink:0">◉ In Progress</span>
+          <div style="font-size:12px"><strong>Step 1 submitted, wizard partially complete.</strong> Process Owner is actively filling steps. Progress auto-saves — they can exit and resume from exactly where they left off.</div></div>
+        <div class="stleg-row"><span class="sp sp-ok" style="min-width:90px;flex-shrink:0">✓ Completed</span>
+          <div style="font-size:12px"><strong>All 7 steps done, "Mark as Complete" confirmed.</strong> Assessment is permanently locked. Full AI evaluation report is ready to download as a formatted PDF.</div></div>
+      </div>`:''}
+    </div>
+
+    <div class="sh">
+      <h3>Process Discoveries</h3>
+      <div class="sh-acts">
+        ${S.role!=='Viewer'?`<button class="btn bs bsm" onclick="S.modal='addClient';draw()">+ Add Client</button>`:''}
+        ${S.role!=='Viewer'?`<button class="btn bp bsm" onclick="S.modal='newAssess';draw()">⚡ Initiate Process Discovery</button>`:''}
+      </div>
+    </div>
+    <div class="sf-bar">
+      <div class="sw"><span class="si">🔍</span>
+        <input type="text" class="fc" placeholder="Search client, process, area..." value="${S.search}" style="padding-left:32px" oninput="S.search=this.value;draw()">
+      </div>
+      <div class="chips">${['All','Draft','In Progress','Completed'].map(f=>`<div class="chip ${S.filter===f?'on':''}" onclick="S.filter='${f}';draw()">${f}</div>`).join('')}</div>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Client Name</th><th>Process Area</th><th>Process Name</th><th>Currency</th><th>Start Date</th><th>Status</th><th>Completion</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${rows.map(a=>`<tr>
+          <td><strong>${a.client}</strong></td>
+          <td><span style="font-size:12px;color:var(--tm)">${a.area}</span></td>
+          <td>${a.process}</td>
+          <td><span class="curr-badge">${a.sym} ${a.currency}</span></td>
+          <td><span style="font-size:12px">${a.date}</span></td>
+          <td>${spill(a.status)}</td>
+          <td>${pb(a.pct)}</td>
+          <td><div class="tacts">
+            ${a.status!=='Completed'?`<div class="tact" title="Resume / Edit" onclick="S.currCode='${a.currency}';S.currSym='${a.sym}';go('discovery',{step:${a.step}})">✏️</div>`:''}
+            <div class="tact" title="View">👁</div>
+            ${a.status==='Completed'?`<div class="tact" title="Download PDF" onclick="toast('Preparing PDF...','ok')">⬇️</div>`:''}
+          </div></td>
+        </tr>`).join('')}
+        ${rows.length===0?`<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--tl)">No assessments found</td></tr>`:''}
+      </tbody>
+    </table>
+    <div class="pag">
+      <span class="pag-i">Showing ${rows.length} of ${all.length} assessments</span>
+      <div class="pag-b"><div class="pbn">‹</div><div class="pbn on">1</div><div class="pbn">›</div></div>
+    </div></div>`);
+}
+
+/* ═══════════════════════════════════════════
+   CLIENTS
+═══════════════════════════════════════════ */
+function clientsHTML() {
+  return shell('Client Management',`
+    <div class="ph"><h2>Client Management</h2><p>Manage client master data used across all assessments</p></div>
+    <div class="sh"><h3>All Clients (${DB.clients.length})</h3>
+      <button class="btn bp bsm" onclick="S.modal='addClient';draw()">+ Add Client</button></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Company</th><th>Industry</th><th>Contact</th><th>Email</th><th>Added On</th><th># Assessments</th><th>Actions</th></tr></thead>
+      <tbody>${DB.clients.map(c=>`<tr>
+        <td><strong>${c.co}</strong><div style="font-size:11px;color:var(--tl)">${c.addr||'—'}</div></td>
+        <td><span style="font-size:12px">${c.ind}</span></td>
+        <td>${c.contact.name||'—'}<div style="font-size:11px;color:var(--tl)">${c.contact.role||''}</div></td>
+        <td><span style="color:var(--bl);font-size:12px">${c.contact.email||'—'}</span></td>
+        <td><span style="font-size:12px">${c.on}</span></td>
+        <td><span class="badge b-ip">${c.count}</span></td>
+        <td><div class="tacts">
+            <div class="tact" title="Edit Client" onclick="S.modal='editClient';S.editCid=${c.id};draw()">✏️</div>
+            <div class="tact del" title="Delete Client" onclick="deleteClient(${c.id})">🗑️</div>
+          </div></td>
+      </tr>`).join('')}</tbody>
+    </table></div>`);
+}
+
+/* ═══════════════════════════════════════════
+   WIZARD HEADER
+═══════════════════════════════════════════ */
+function wizHead(cur) {
+  const STEPS=['Customer\nDetails','Process\nDetails','Volumetrics','Activity\nBreakdown','GSDA\nEvaluation','AI\nArchetypes','Evaluation\nSummary'];
+  const pct=[0,15,28,42,57,71,85,100];
+  let h=`<div class="wiz-card">
+    <div class="wiz-meta">
+      <div><h3>Process Discovery Assessment</h3>
+        <p>Step ${cur} of 7 — ${STEPS[cur-1].replace('\n',' ')}</p>
+        <div class="wiz-prog">Step completion: ${pct[cur]}% <span style="color:var(--tl)">· Currency: </span><span class="curr-badge" style="font-size:10px">${S.currSym||'₹'} ${S.currCode||'INR'}</span></div>
+      </div>
+      <button class="btn bs bsm" onclick="go('dashboard')">✕ Exit</button>
+    </div>
+    <div class="steps-wrap"><div class="steps">`;
+  STEPS.forEach((s,i)=>{
+    const n=i+1,cls=n<cur?'sn-done':n===cur?'sn-act':'sn-pend',lbl=n===cur?'slbl act':'slbl';
+    h+=`<div class="step"><div class="step-b"><div class="sn ${cls}">${n<cur?'✓':n}</div><div class="${lbl}">${s.replace('\n','<br>')}</div></div>${n<7?`<div class="sline ${n<cur?'done':''}"></div>`:''}</div>`;
+  });
+  return h+`</div></div></div>`;
+}
+
+/* ═══════════════════════════════════════════
+   STEP 1 — CUSTOMER DETAILS (with Currency)
+═══════════════════════════════════════════ */
+function s1HTML() {
+  const currOpts = CURRENCIES.map(c=>`<option value="${c.code}" ${S.currCode===c.code?'selected':''}>${c.lbl}</option>`).join('');
+  const currInfo = CURRENCIES.find(c=>c.code===S.currCode);
+  return shell('Process Discovery', wizHead(1)+`
+    <div class="fcard">
+      <h4>🏢 Client Information</h4>
+      <div class="fr">
+        <div class="fg"><label class="req">Customer Name</label>
+          <select class="fc">${DB.clients.map(c=>`<option>${c.co}</option>`).join('')}</select>
+          <p class="ht">Select from client master. Add new clients via Client Management.</p></div>
+        <div class="fg"><label>Industry</label>
+          <input class="fc fc-ro" value="Manufacturing" readonly>
+          <p class="ht">Auto-populated from client master</p></div>
+      </div>
+      <div class="sub-box">
+        <div class="sblbl">Customer Representative (Auto-fetched)</div>
+        <div class="fr3">
+          <div class="fg" style="margin-bottom:0"><label>Name</label><input class="fc fc-ro" value="Sandeep Rao" readonly></div>
+          <div class="fg" style="margin-bottom:0"><label>Email</label><input class="fc fc-ro" value="sandeep@ventora.com" readonly></div>
+          <div class="fg" style="margin-bottom:0"><label>Role</label><input class="fc fc-ro" value="CTO" readonly></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fcard" style="border:2px solid rgba(29,95,212,.18);background:linear-gradient(135deg,#fff,#F8FBFF)">
+      <h4 style="color:var(--bl)">💱 Assessment Currency</h4>
+      <div class="fr">
+        <div class="fg">
+          <label class="req">Currency</label>
+          <div class="curr-select-wrap">
+            <span class="curr-flag">${currInfo?.flag||'🌐'}</span>
+            <select class="fc fc-curr" onchange="S.currCode=this.value;S.currSym=CURRENCIES.find(c=>c.code===this.value)?.sym||'₹';draw()">
+              ${currOpts}
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Selected Currency Symbol</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:5px">
+            <div style="width:54px;height:44px;border-radius:var(--rm);background:linear-gradient(135deg,var(--nv),var(--bl));display:flex;align-items:center;justify-content:center;font-family:Sora;font-size:22px;font-weight:800;color:var(--cy)">${S.currSym||'₹'}</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--th)">${currInfo?.lbl?.split('—')[1]?.trim()||'Indian Rupee'}</div>
+              <div style="font-size:11px;color:var(--tm)">${currInfo?.code||'INR'} · Used in all monetary calculations</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="curr-hint">
+        💡 <strong>This currency applies to the entire assessment.</strong> All monetary inputs in Volumetrics (Step 3), Business Benefits, FTE Costs, ROI calculations, and the final Evaluation Summary (Step 7) will use <strong>${currInfo?.sym||'₹'} (${S.currCode||'INR'})</strong>.
+      </div>
+    </div>
+
+    <div class="fcard">
+      <h4>📋 Assessment Details</h4>
+      <div class="fr">
+        <div class="fg"><label>Assessment Date</label>
+          <input type="date" class="fc fc-ro" value="${new Date().toISOString().split('T')[0]}" readonly>
+          <p class="ht">Auto-set on initiation — not editable</p></div>
+        <div class="fg"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="req">Business Function</label>
+          <select class="fc"><option selected>Finance</option>${BIZ_FN.filter(b=>b!=='Finance').map(b=>`<option>${b}</option>`).join('')}</select></div>
+        <div class="fg"><label class="req">Process Area</label>
+          <select class="fc"><option selected>Accounts Payable</option><option>Budgeting</option><option>Accounting</option><option>Treasury</option><option>Tax</option></select>
+          <p class="ht">Filtered by Business Function</p></div>
+      </div>
+    </div>
+
+    <div class="fcard">
+      <h4>👤 Process SME / Owner (Client Side)</h4>
+      <div class="fr3">
+        <div class="fg"><label>Name</label><input class="fc" value="Ravi Kumar"></div>
+        <div class="fg"><label>Email</label><input class="fc" value="ravi@ventora.com"></div>
+        <div class="fg"><label>Phone</label><input class="fc" value="9988776655"></div>
+      </div>
+    </div>
+
+    <div class="fcard">
+      <h4>🧑‍💼 Assessment Owner (SenzCraft)</h4>
+      <div class="fr3">
+        <div class="fg"><label>Name</label><input class="fc" value="Murali D"></div>
+        <div class="fg"><label>Email</label><input class="fc" value="admin@senzcraft.com"></div>
+        <div class="fg"><label>Phone</label><input class="fc" value="9876500001"></div>
+      </div>
+    </div>
+
+    <div class="ff">
+      <button class="btn bs" onclick="go('dashboard')">Cancel</button>
+      <div class="ff-r">
+        <button class="btn bs" onclick="toast('Progress saved ✓')">💾 Save</button>
+        <button class="btn bp" onclick="go('discovery',{step:2})">Next Step →</button>
+      </div>
+    </div>`);
+}
+
+/* STEP 2 */
+function s2HTML() {
+  return shell('Process Discovery', wizHead(2)+`
+    <div class="fcard" id="aiT2">
+      <div class="fcard-hdr"><h4>📝 Process Information</h4>
+        <button class="btn bai bsm" onclick="aiSim('aiT2')">✨ AI Populate from Document</button></div>
+      <div class="fr">
+        <div class="fg"><label class="req">Process Name</label><input class="fc" value="AP Processing — Invoice to Payment"></div>
+        <div class="fg"><label>Process Frequency</label>
+          <select class="fc" id="procFreq" onchange="handleFreqChange()">
+            <option selected>Daily</option><option>Weekly</option><option>Monthly</option>
+            <option>Bi-weekly</option><option>Fortnightly</option><option>Ad-hoc</option>
+          </select>
+          <div id="adhocWrap" style="display:none;margin-top:8px">
+            <input class="fc" id="adhocText" placeholder="Describe the ad-hoc frequency (e.g. triggered per vendor request)">
+          </div>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="req">Quality of Data</label>
+          <select class="fc">
+            <option selected>Accurate</option>
+            <option>Less Cleanup Required</option>
+            <option>Complete Cleanup Required</option>
+          </select>
+          <p class="ht">Indicates the current state of data quality for this process</p>
+        </div>
+        <div class="fg"></div>
+      </div>
+      <div class="fg"><label>Upload Process Documents</label>
+        <input type="file" id="docFileInput" accept=".pdf,.docx,.pptx" multiple style="display:none" onchange="handleFileSelect(this)">
+        <div class="uzone" id="uploadZone" onclick="document.getElementById('docFileInput').click()">
+          <div style="font-size:28px">📁</div>
+          <p>Drag & drop or <span class="browse">browse files</span></p>
+          <p style="font-size:11px;color:var(--tl);margin-top:3px">PDF, DOCX, PPTX — AI will extract all details automatically</p>
+        </div>
+        <div id="fileList">
+          <div class="ufile">
+            📄 <strong>AP_Process_Flow_v2.pdf</strong>
+            <span style="color:var(--tl);margin-left:4px">1.2 MB</span>
+            <span class="badge b-ok" style="margin-left:auto">✓ Uploaded</span>
+            <div class="tact del" onclick="removeFile(this)" title="Remove file" style="margin-left:6px">✕</div>
+          </div>
+        </div>
+        <div id="uploadBtnWrap" style="margin-top:10px;display:flex;align-items:center;gap:10px">
+          <button class="btn bp bsm" onclick="uploadFiles()" id="uploadBtn">
+            ⬆️ Upload Files
+          </button>
+          <button class="btn bs bsm" onclick="document.getElementById('docFileInput').click()">
+            + Add More Files
+          </button>
+          <span id="uploadStatus" style="font-size:12px;color:var(--ok);font-weight:600"></span>
+        </div>
+      </div>
+      <div class="fg"><label>Process Details</label>
+        <div class="rt-bar"><button>B</button><button><i>I</i></button><button>• List</button><button>1. List</button></div>
+        <textarea class="fc rt-ta" rows="4">The Accounts Payable (AP) process involves receiving, validating, matching, and posting invoices for payment. The process begins with invoice receipt via email or portal, followed by 3-way matching against PO and GRN data in SAP. Approved invoices are posted to the ERP and scheduled for the weekly payment run.</textarea></div>
+
+      <div class="fg">
+        <label>Goals / Outcomes</label>
+        <p class="ht" style="margin-bottom:7px">Add each goal as a separate point</p>
+        <div id="goalsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+          <div class="goal-row" style="display:flex;align-items:center;gap:6px">
+            <span style="width:20px;height:20px;border-radius:50%;background:var(--bl);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</span>
+            <input class="fc" style="flex:1" value="Reduce invoice processing cycle time from 15 days to 3 days">
+            <div class="tact del" onclick="removeGoal(this)" title="Remove">✕</div>
+          </div>
+          <div class="goal-row" style="display:flex;align-items:center;gap:6px">
+            <span style="width:20px;height:20px;border-radius:50%;background:var(--bl);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</span>
+            <input class="fc" style="flex:1" value="Eliminate manual data entry errors (currently ~8%)">
+            <div class="tact del" onclick="removeGoal(this)" title="Remove">✕</div>
+          </div>
+          <div class="goal-row" style="display:flex;align-items:center;gap:6px">
+            <span style="width:20px;height:20px;border-radius:50%;background:var(--bl);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</span>
+            <input class="fc" style="flex:1" value="Achieve 95%+ touchless invoice processing via AI automation">
+            <div class="tact del" onclick="removeGoal(this)" title="Remove">✕</div>
+          </div>
+        </div>
+        <button class="btn bs bsm" onclick="addGoal()" style="width:100%;justify-content:center;border-style:dashed">+ Add Goal / Outcome</button>
+      </div>
+
+      <div class="fg">
+        <label>Existing Systems / Tools</label>
+        <p class="ht" style="margin-bottom:7px">Type or select a system and press Enter to add as tag</p>
+        <div id="tagContainer" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border:1.5px solid var(--br);border-radius:var(--rm);background:#fff;min-height:44px;cursor:text" onclick="document.getElementById('tagInput').focus()">
+          <span class="sys-tag">SAP S/4HANA <span onclick="removeTag(this)" style="cursor:pointer;margin-left:4px;opacity:.6">✕</span></span>
+          <span class="sys-tag">Microsoft Outlook <span onclick="removeTag(this)" style="cursor:pointer;margin-left:4px;opacity:.6">✕</span></span>
+          <span class="sys-tag">SharePoint <span onclick="removeTag(this)" style="cursor:pointer;margin-left:4px;opacity:.6">✕</span></span>
+          <span class="sys-tag">Excel <span onclick="removeTag(this)" style="cursor:pointer;margin-left:4px;opacity:.6">✕</span></span>
+          <span class="sys-tag">Esker AP <span onclick="removeTag(this)" style="cursor:pointer;margin-left:4px;opacity:.6">✕</span></span>
+          <input id="tagInput" type="text" placeholder="Type system name..." style="border:none;outline:none;font-family:DM Sans;font-size:13px;min-width:140px;flex:1;padding:2px 4px" onkeydown="handleTagKey(event)" oninput="showTagSuggest(this.value)" onblur="hideTagSuggest()">
+        </div>
+        <div id="tagSuggest" style="display:none;position:absolute;background:#fff;border:1.5px solid var(--br);border-radius:var(--rm);box-shadow:var(--sm);z-index:50;min-width:220px;margin-top:4px"></div>
+        <p class="ht">Press <kbd style="background:#F0F4FA;border:1px solid var(--br);border-radius:3px;padding:1px 5px;font-size:10px">Enter</kbd> to add · Click × to remove</p>
+      </div>
+    </div>
+    <div class="ff">
+      <button class="btn bs" onclick="go('dashboard')">Cancel</button>
+      <div class="ff-r">
+        <button class="btn bs" onclick="go('discovery',{step:1})">← Previous</button>
+        <button class="btn bs" onclick="toast('Progress saved ✓')">💾 Save</button>
+        <button class="btn bp" onclick="go('discovery',{step:3})">Next Step →</button>
+      </div>
+    </div>`);
+}
+
+/* STEP 3 — Volumetrics with currency */
+function s3HTML() {
+  const sym = S.currSym||'₹';
+  const code = S.currCode||'INR';
+  return shell('Process Discovery', wizHead(3)+`
+    <div class="fcard">
+      <div class="fcard-hdr"><h4>📊 Volumetrics & KPIs</h4>
+        <button class="btn bai bsm" onclick="toast('AI extracting volumetrics from process docs...','ok')">✨ AI Suggest</button></div>
+      <div class="ib ib-w">ℹ️ AI has pre-filled available metrics from your uploaded document. Please validate and fill any missing values.</div>
+      <div class="ib ib-b" style="margin-bottom:14px">💱 All monetary fields use <strong>${sym} ${code}</strong> as selected in Step 1.</div>
+
+      <div class="fr3">
+        <div class="fg"><label>Transaction Volume (per month)</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="1200" min="0">
+            <div class="num-unit"><select><option>invoices</option><option>transactions</option><option>cases</option><option>requests</option><option>records</option></select></div>
+          </div></div>
+        <div class="fg"><label>Processing Time (per transaction)</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="15" min="0">
+            <div class="num-unit"><select><option>minutes</option><option>hours</option><option>days</option></select></div>
+          </div></div>
+        <div class="fg"><label>FTE Count</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="4" min="0">
+            <div class="num-unit" style="padding:9px 12px">FTEs</div>
+          </div></div>
+      </div>
+
+      <div class="fr3">
+        <div class="fg"><label>FTE Cost (Annual) <span style="color:var(--tm);font-weight:400;text-transform:none;letter-spacing:0">${sym}</span></label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="2400000" min="0">
+            <div class="num-unit" style="padding:9px 12px">${sym}</div>
+          </div></div>
+        <div class="fg"><label>Cost Per Transaction <span style="color:var(--tm);font-weight:400;text-transform:none;letter-spacing:0">${sym}</span></label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="167" min="0">
+            <div class="num-unit" style="padding:9px 12px">${sym}</div>
+          </div></div>
+        <div class="fg"><label>Hours Spent Per Day</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="28" min="0">
+            <div class="num-unit" style="padding:9px 12px">hrs</div>
+          </div></div>
+      </div>
+
+      <div class="fr3">
+        <div class="fg"><label>Working Days / Month</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="22" min="1" max="31">
+            <div class="num-unit" style="padding:9px 12px">days</div>
+          </div></div>
+        <div class="fg"><label>Current Error Rate</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="8.2" min="0" max="100" step="0.1">
+            <div class="num-unit" style="padding:9px 12px">%</div>
+          </div></div>
+        <div class="fg"><label>Business Impact of Errors <span style="color:var(--tm);font-weight:400;text-transform:none;letter-spacing:0">${sym} / month</span></label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="320000" min="0">
+            <div class="num-unit" style="padding:9px 12px">${sym}</div>
+          </div></div>
+      </div>
+
+      <div class="sec-div">Revenue & Risk (Optional)</div>
+      <div class="fr3">
+        <div class="fg"><label>Revenue Leakage (Annual) <span style="color:var(--tm);font-weight:400;text-transform:none;letter-spacing:0">${sym}</span></label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="1850000" min="0">
+            <div class="num-unit" style="padding:9px 12px">${sym}</div>
+          </div></div>
+        <div class="fg"><label>SLA Breach Rate</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="12" min="0" max="100">
+            <div class="num-unit" style="padding:9px 12px">%</div>
+          </div></div>
+        <div class="fg"><label>Risk-Prone Transactions / Month</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="96" min="0">
+            <div class="num-unit"><select><option>transactions</option><option>invoices</option><option>cases</option></select></div>
+          </div></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Avg. Financial Risk (per transaction) <span style="color:var(--tm);font-weight:400;text-transform:none;letter-spacing:0">${sym}</span></label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="3400" min="0">
+            <div class="num-unit" style="padding:9px 12px">${sym}</div>
+          </div></div>
+        <div class="fg"></div>
+      </div>
+
+      <div class="sec-div">Process Observations & Context</div>
+      <div class="fg">
+        <label>Process Observations / Additional Notes</label>
+        <p class="ht" style="margin-bottom:6px">Capture qualitative context — peak load periods, exceptions, seasonal patterns, known pain points</p>
+        <textarea class="fc" rows="3" placeholder="e.g. Peak load in month-end closing (last 3 working days): 3x transaction volume spike. Seasonal increase in Q4 during vendor reconciliation. Manual workarounds used for foreign currency invoices.">Peak load in month-end closing (last 3 working days): 3× transaction volume spike. Seasonal increase in Q4 during vendor reconciliation. Manual workarounds exist for foreign currency invoices — not captured in SAP automatically.</textarea>
+      </div>
+    </div>
+    <div class="ff">
+      <button class="btn bs" onclick="go('dashboard')">Cancel</button>
+      <div class="ff-r">
+        <button class="btn bs" onclick="go('discovery',{step:2})">← Previous</button>
+        <button class="btn bs" onclick="toast('Progress saved ✓')">💾 Save</button>
+        <button class="btn bp" onclick="go('discovery',{step:4})">Next Step →</button>
+      </div>
+    </div>`);
+}
+
+/* STEP 4 — Activity Breakdown */
+const ACTS_SEED = [
+  {n:'Invoice Receipt',d:'Receive invoices via email, portal or post',dr:'Invoice PDF, Vendor email',ss:'Outlook / Vendor Portal',al:'Fully Automated'},
+  {n:'Invoice Validation',d:'Validate invoice fields against PO and GRN',dr:'PO Number, GRN, Invoice line items',ss:'SAP S/4HANA',al:'Manual'},
+  {n:'PO / Non-PO Matching',d:'3-way match between PO, GRN and Invoice',dr:'PO data, GRN data, Vendor master',ss:'SAP S/4HANA',al:'Semi Automated'},
+  {n:'Approval Workflow',d:'Route invoice for manager approval on mismatch',dr:'Approval matrix, Employee directory',ss:'Power Automate',al:'Semi Automated'},
+  {n:'ERP Posting',d:'Post approved invoice into SAP FI module',dr:'GL codes, Cost centers, Tax codes',ss:'SAP S/4HANA',al:'Manual'}
+];
+
+function s4HTML() {
+  return shell('Process Discovery', wizHead(4)+`
+    <div class="fcard">
+      <div class="fcard-hdr"><h4>🔄 Activity Breakdown — L3 Level</h4>
+        <button class="btn bai bsm" onclick="toast('AI generating L3 activity breakdown...','ok')">✨ AI Generate</button></div>
+      <div class="ib ib-ai">🤖 Activities below are AI-generated from your process document and description. Edit, add, or delete rows as needed.</div>
+      <div class="atw"><table>
+        <thead><tr>
+          <th style="min-width:130px">Activity Name</th>
+          <th style="min-width:175px">Description</th>
+          <th style="min-width:165px">Data Requirement</th>
+          <th style="min-width:150px">Source System</th>
+          <th style="min-width:155px">Existing Automation Level</th>
+          <th style="width:40px"></th>
+        </tr></thead>
+        <tbody id="actRows">
+          ${ACTS_SEED.map((a,i)=>`<tr id="ar${i}">
+            <td><input class="fc" value="${a.n}" style="font-size:12px;padding:5px 8px"></td>
+            <td><textarea class="fc" style="font-size:12px;min-height:46px">${a.d}</textarea></td>
+            <td><textarea class="fc" style="font-size:12px;min-height:46px">${a.dr}</textarea></td>
+            <td><input class="fc" value="${a.ss||''}" placeholder="e.g. SAP, Oracle, Excel" style="font-size:12px;padding:5px 8px"></td>
+            <td><select class="fc" style="font-size:12px;padding:5px 8px">${['Manual','Semi Automated','Fully Automated'].map(o=>`<option ${o===a.al?'selected':''}>${o}</option>`).join('')}</select></td>
+            <td><div class="tact del" onclick="this.closest('tr').remove()" title="Delete row">🗑</div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table><div class="add-row" onclick="addActRow()">+ Add Activity Row</div></div>
+    </div>
+    <div class="ff">
+      <button class="btn bs" onclick="go('dashboard')">Cancel</button>
+      <div class="ff-r">
+        <button class="btn bs" onclick="go('discovery',{step:3})">← Previous</button>
+        <button class="btn bs" onclick="toast('Progress saved ✓')">💾 Save</button>
+        <button class="btn bp" onclick="go('discovery',{step:5})">Next Step →</button>
+      </div>
+    </div>`);
+}
+
+function addActRow() {
+  const tb=document.getElementById('actRows');if(!tb)return;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input class="fc" style="font-size:12px;padding:5px 8px" placeholder="Activity name"></td>
+    <td><textarea class="fc" style="font-size:12px;min-height:46px" placeholder="Description"></textarea></td>
+    <td><textarea class="fc" style="font-size:12px;min-height:46px" placeholder="Data inputs required"></textarea></td>
+    <td><input class="fc" placeholder="e.g. SAP, Excel" style="font-size:12px;padding:5px 8px"></td>
+    <td><select class="fc" style="font-size:12px;padding:5px 8px"><option>Manual</option><option>Semi Automated</option><option>Fully Automated</option></select></td>
+    <td><div class="tact del" onclick="this.closest('tr').remove()">🗑</div></td>`;
+  tb.appendChild(tr);
+}
+
+/* STEP 5 — GSDA */
+const GSDA={
+  goals:[
+    'Automate invoice extraction and classification using OCR / IDP',
+    'Achieve 3-way PO matching with >95% accuracy',
+    'Enable automated invoice posting in SAP without manual intervention',
+    'Reduce AP processing cycle time from 15 days to under 3 days'
+  ],
+  signals:[
+    'Invoice received via email or supplier portal',
+    'PO mismatch detected during 3-way match',
+    'Invoice without a valid PO reference',
+    'Approval escalation due to manager unavailability'
+  ],
+  decisions:[
+    'Determine invoice type: PO-based or Non-PO',
+    'Evaluate 3-way match success or failure',
+    'Route invoice for manager approval on exception',
+    'Determine if invoice should be blocked or posted'
+  ],
+  actions:[
+    'Trigger OCR extraction and field classification on receipt',
+    'Initiate 3-way match against PO and GRN in SAP',
+    'Send mismatch alert with details to AP supervisor',
+    'Schedule approved invoice in weekly payment run'
+  ]
+};
+const GSDA_M=[{k:'goals',lbl:'🎯 Goals',clr:'#1A5FD4'},{k:'signals',lbl:'📡 Signals',clr:'#7C3AED'},{k:'decisions',lbl:'🔀 Decisions',clr:'#0AB472'},{k:'actions',lbl:'⚡ Actions',clr:'#F0A500'}];
+
+function s5HTML() {
+  const gsdaSections = [
+    {k:'goals',    lbl:'🎯 Goals',     clr:'#1A5FD4', bg:'rgba(29,95,212,.08)'},
+    {k:'signals',  lbl:'📡 Signals',   clr:'#7C3AED', bg:'rgba(124,58,237,.08)'},
+    {k:'decisions',lbl:'🔀 Decisions', clr:'#0AB472', bg:'rgba(10,180,114,.08)'},
+    {k:'actions',  lbl:'⚡ Actions',   clr:'#F0A500', bg:'rgba(240,165,0,.08)'}
+  ];
+
+  const sectionHTML = gsdaSections.map(m => {
+    const items = GSDA[m.k];
+    const rows = items.map((item,i) => `
+      <div class="gsda-item" style="align-items:center;gap:6px;padding:5px 0">
+        <div class="gsda-num" style="background:${m.clr};flex-shrink:0">${i+1}</div>
+        <input class="fc" style="flex:1;font-size:12px;padding:5px 8px;border-color:transparent;background:transparent"
+          value="${item.replace(/"/g,'&quot;')}"
+          onfocus="this.style.borderColor='var(--bl)';this.style.background='#fff'"
+          onblur="this.style.borderColor='transparent';this.style.background='transparent';updateGSDA('${m.k}',${i},this.value)"
+          placeholder="Enter item...">
+        <div class="tact del" onclick="deleteGSDAItem('${m.k}',${i})" title="Remove" style="flex-shrink:0;font-size:11px">✕</div>
+      </div>`).join('');
+    return `
+      <div class="gsda-section">
+        <div class="gsda-hdr" style="background:${m.bg}">
+          <div style="width:8px;height:8px;border-radius:50%;background:${m.clr};flex-shrink:0"></div>
+          <h5 style="color:${m.clr};flex:1">${m.lbl}</h5>
+          <span style="font-size:10px;color:var(--tl);font-weight:600">${items.length} item${items.length!==1?'s':''}</span>
+        </div>
+        <div class="gsda-body">${rows}</div>
+        <div style="padding:7px 12px;border-top:1px dashed var(--br);display:flex;align-items:center;gap:6px;cursor:pointer"
+          onclick="addGSDAItem('${m.k}')">
+          <span style="color:${m.clr};font-size:16px;line-height:1">+</span>
+          <span style="color:${m.clr};font-size:12px;font-weight:600">Add ${m.lbl.split(' ').slice(1).join(' ')} item</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  return shell('Process Discovery', wizHead(5)+`
+    <div class="fcard">
+      <div class="fcard-hdr"><h4>🧠 GSDA Evaluation</h4>
+        <button class="btn bai bsm" onclick="toast('Generating GSDA from all process data...','ok')">✨ Generate with AI</button></div>
+      <div class="ib ib-ai" style="margin-bottom:14px">🤖 AI-generated from process description, volumetrics, and activity breakdown. Click any item to <strong>edit it inline</strong>, use ✕ to delete, and the <strong>+ button</strong> at the bottom of each section to add new items.</div>
+
+      <div class="gsda-grid">${sectionHTML}</div>
+
+      <div style="margin-top:14px;background:linear-gradient(135deg,#F0F7FF,#F5F3FF);border:1.5px solid rgba(29,95,212,.2);border-radius:var(--rm);padding:14px 18px">
+        <div style="font-size:12px;font-weight:700;color:var(--th);margin-bottom:12px">⚡ Overall Process Automation Assessment</div>
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="gsda-auto-lbl">Can this process be automated?</span>
+            <div class="yes-no">
+              <div class="yn-btn yes on" onclick="this.classList.add('on');this.nextElementSibling.classList.remove('on')">Yes</div>
+              <div class="yn-btn no" onclick="this.classList.add('on');this.previousElementSibling.classList.remove('on')">No</div>
+            </div>
+          </div>
+          <div style="height:24px;width:1px;background:var(--br)"></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="gsda-auto-lbl">Overall Automation Level Achievable</span>
+            <div class="pct-wrap">
+              <input type="number" value="72" min="0" max="100" style="width:64px">
+              <span style="font-size:13px;font-weight:700;color:var(--tm)">%</span>
+            </div>
+          </div>
+          <div style="height:24px;width:1px;background:var(--br)"></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="gsda-auto-lbl">Automation Horizon</span>
+            <select class="fc" style="padding:5px 10px;font-size:12px;width:auto">
+              <option>Short-term (0–6 months)</option>
+              <option selected>Medium-term (6–12 months)</option>
+              <option>Long-term (12–24 months)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="fcard" style="margin-top:14px;margin-bottom:0;border:1px solid rgba(29,95,212,.2);background:linear-gradient(135deg,#fff,#F8FBFF)">
+        <div class="fcard-hdr" style="margin-bottom:12px">
+          <h4 style="color:var(--bl)">🚀 AI Opportunity</h4>
+          <span class="badge b-ip">Step 5 field</span>
+        </div>
+        <div class="ib ib-ai" style="margin-bottom:10px">Based on the GSDA analysis above, describe the overall AI automation opportunity for this process.</div>
+        <div class="rt-bar"><button>B</button><button><i>I</i></button><button>• List</button></div>
+        <textarea class="fc rt-ta" rows="3">High potential for end-to-end automation using IDP + Agentic AI. 3-way matching and ERP posting are the highest-value automation targets. Estimated 72% of total process steps can be automated or significantly augmented with AI — reducing manual handling from 15 days to under 2 days cycle time.</textarea>
+      </div>
+    </div>
+    <div class="ff">
+      <button class="btn bs" onclick="go('dashboard')">Cancel</button>
+      <div class="ff-r">
+        <button class="btn bs" onclick="go('discovery',{step:4})">← Previous</button>
+        <button class="btn bs" onclick="toast('Progress saved ✓')">💾 Save</button>
+        <button class="btn bp" onclick="go('discovery',{step:6})">Next Step →</button>
+      </div>
+    </div>`);
+}
+
+function toggleAcc(k) { S.acc[k]=!S.acc[k]; const b=document.getElementById('accb_'+k),a=document.getElementById('arw_'+k); if(b)b.classList.toggle('open'); if(a)a.textContent=S.acc[k]?'▲':'▼'; }
+
+/* STEP 6 — AI Archetypes */
+const ARCHETYPES = [
+  {id:1,ico:'📄',title:'Document AI / IDP',desc:'Extract structured data from unstructured invoices, PDFs, and scanned documents using Intelligent Document Processing.',on:true},
+  {id:2,ico:'🤖',title:'Agentic AI',desc:'Autonomous end-to-end process orchestration — invoice receipt → validation → approval routing → ERP posting.',on:true},
+  {id:3,ico:'🧠',title:'RAG + LLM',desc:'Contextual query handling, vendor communication drafting, and exception explanation using retrieval-augmented generation.',on:true},
+  {id:4,ico:'⚖️',title:'Decision Science',desc:'3-way matching logic, approval routing rules, payment priority scoring, and duplicate payment detection.',on:false},
+  {id:5,ico:'💬',title:'Conversational AI',desc:'AP helpdesk bot for vendor status queries, payment escalations, and internal team assistance.',on:true},
+  {id:6,ico:'👁️',title:'Vision AI / OCR',desc:'Optical character recognition for scanned invoices and handwritten documents before IDP classification.',on:false}
+];
+let nextArchId = 7;
+
+const TECH_STACK = [
+  {lbl:'IDP / Document AI',val:'Azure AI Document Intelligence, ABBYY Vantage'},
+  {lbl:'LLM / Agentic',val:'Azure OpenAI (GPT-4o), LangChain'},
+  {lbl:'Conversational AI',val:'Microsoft Copilot Studio'},
+  {lbl:'RPA / Automation',val:'Automation Anywhere A360, Power Automate'},
+  {lbl:'ERP Integration',val:'SAP S/4HANA, SAP Intelligent RPA'},
+  {lbl:'Analytics',val:'Power BI, Azure Synapse'}
+];
+
+const ARCH_ICONS = ['📄','🤖','🧠','⚖️','💬','👁️','🔍','📊','🔗','🛡️','⚡','🌐','🧩','📡','🎯'];
+
+function s6HTML() {
+  const archModal = S.archModal;
+  return shell('Process Discovery', wizHead(6)+`
+    <div class="fcard">
+      <div class="fcard-hdr">
+        <h4>🤖 AI Archetypes</h4>
+        <div style="display:flex;gap:8px">
+          <button class="btn bai bsm" onclick="toast('Recommending AI archetypes from process analysis...','ok')">✨ Generate with AI</button>
+          <button class="btn bp bsm" onclick="openArchModal(null)">+ Add Archetype</button>
+        </div>
+      </div>
+      <div class="ib ib-ai" style="margin-bottom:14px">💡 Select the AI patterns for this process. Use ✏️ to edit or 🗑 to remove. Click + Add Archetype to define a new one.</div>
+      <div class="arch-grid" id="archGrid">
+        ${ARCHETYPES.map(a=>`
+          <div class="arch-card ${a.on?'selected':''}" id="ac_${a.id}">
+            <div class="arch-card-hdr">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:20px">${a.ico}</span>
+                <span class="arch-card-title">${a.title}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <div class="tact" onclick="openArchModal(${a.id})" title="Edit archetype" style="width:24px;height:24px;font-size:12px">✏️</div>
+                <div class="tact del" onclick="deleteArch(${a.id})" title="Remove archetype" style="width:24px;height:24px;font-size:12px">🗑</div>
+                <div class="arch-check ${a.on?'on':''}" onclick="toggleArchById(${a.id},this)" title="Include / Exclude">${a.on?'✓':''}</div>
+              </div>
+            </div>
+            <div class="arch-card-body">${a.desc}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="fcard">
+      <h4>🛠️ Technology Stack</h4>
+      <div class="ib ib-b" style="margin-bottom:14px">Recommended platforms and tools for the selected AI archetypes above. Edit as needed.</div>
+      <div class="tech-stack-grid">
+        ${TECH_STACK.map(t=>`
+          <div class="tech-chip">
+            <div class="tech-chip-lbl">${t.lbl}</div>
+            <input class="fc" value="${t.val}" style="font-size:12px;padding:5px 8px;margin-top:4px">
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="fcard" style="border:1.5px solid rgba(240,165,0,.3);background:linear-gradient(135deg,#fff,#FFFDF5)">
+      <h4 style="color:#92400E">⚙️ Implementation Complexity</h4>
+      <div class="fr3">
+        <div class="fg"><label class="req">Overall Complexity</label>
+          <select class="fc">
+            <option>Low — Under 4 weeks</option>
+            <option selected>Medium — 8 to 12 weeks</option>
+            <option>High — 3 to 6 months</option>
+            <option>Very High — Over 6 months</option>
+          </select></div>
+        <div class="fg"><label>Estimated Timeline</label>
+          <div class="num-wrap">
+            <input type="number" class="fc" value="10" min="1">
+            <div class="num-unit"><select><option>weeks</option><option>months</option></select></div>
+          </div></div>
+        <div class="fg"><label>Key Risk Factor</label>
+          <select class="fc">
+            <option selected>Data Quality</option>
+            <option>System Integration</option>
+            <option>Change Management</option>
+            <option>Regulatory Compliance</option>
+            <option>Budget Constraints</option>
+          </select></div>
+      </div>
+      <div class="fg"><label>Complexity Notes</label>
+        <textarea class="fc" rows="2">Integration with SAP S/4HANA requires coordination with IT team. Master data cleanup (vendor master, GL codes) needed before go-live. Change management for AP team is the critical success factor.</textarea>
+      </div>
+    </div>
+
+    <div class="ff">
+      <button class="btn bs" onclick="go('dashboard')">Cancel</button>
+      <div class="ff-r">
+        <button class="btn bs" onclick="go('discovery',{step:5})">← Previous</button>
+        <button class="btn bs" onclick="toast('Progress saved ✓')">💾 Save</button>
+        <button class="btn bp" onclick="go('discovery',{step:7})">Next Step →</button>
+      </div>
+    </div>
+
+    ${archModal ? archModalHTML() : ''}`);
+}
+
+function archModalHTML() {
+  const m = S.archModal;
+  const isNew = !m.id;
+  const a = isNew ? {id:null,ico:'🤖',title:'',desc:'',on:true} : ARCHETYPES.find(x=>x.id===m.id)||{};
+  return `<div class="mo" onclick="if(event.target===this){S.archModal=null;draw()}">
+    <div class="md" style="max-width:480px">
+      <div class="md-hdr">
+        <h3>${isNew?'➕ Add New Archetype':'✏️ Edit Archetype'}</h3>
+        <div class="md-x" onclick="S.archModal=null;draw()">✕</div>
+      </div>
+      <div class="fg">
+        <label class="req">Icon</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px">
+          ${ARCH_ICONS.map(ic=>`<div onclick="S.archModal.selIco='${ic}';this.closest('.fg').querySelector('.ico-preview').textContent='${ic}';document.querySelectorAll('.ico-opt').forEach(x=>x.classList.remove('ico-sel'));this.classList.add('ico-sel')"
+            class="ico-opt ${(S.archModal.selIco||a.ico)===ic?'ico-sel':''}"
+            style="width:34px;height:34px;border-radius:8px;border:1.5px solid var(--br);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all .14s;${(S.archModal.selIco||a.ico)===ic?'background:rgba(29,95,212,.1);border-color:var(--bl)':''}">${ic}</div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--tl)">Selected: <span class="ico-preview" style="font-size:16px">${S.archModal.selIco||a.ico}</span></div>
+      </div>
+      <div class="fg"><label class="req">Archetype Name</label>
+        <input id="am_title" type="text" class="fc" value="${a.title}" placeholder="e.g. Predictive Analytics"></div>
+      <div class="fg"><label class="req">Description</label>
+        <textarea id="am_desc" class="fc" rows="3" placeholder="Describe what this AI archetype does for this process...">${a.desc}</textarea></div>
+      <div class="fg"><label>Include in Assessment</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <div class="yn-btn yes ${(S.archModal.selOn!==undefined?S.archModal.selOn:a.on)?'on':''}"
+            onclick="S.archModal.selOn=true;this.classList.add('on');this.nextElementSibling.classList.remove('on')">✓ Include</div>
+          <div class="yn-btn no ${(S.archModal.selOn!==undefined?S.archModal.selOn:a.on)?'':'on'}"
+            onclick="S.archModal.selOn=false;this.classList.add('on');this.previousElementSibling.classList.remove('on')">✕ Exclude</div>
+        </div>
+      </div>
+      <div class="md-footer">
+        <button class="btn bs" onclick="S.archModal=null;draw()">Cancel</button>
+        <button class="btn bp" onclick="saveArch(${a.id||'null'})">💾 ${isNew?'Add Archetype':'Save Changes'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openArchModal(id) {
+  S.archModal = {id, selIco: id ? (ARCHETYPES.find(x=>x.id===id)||{}).ico : '🤖', selOn: undefined};
+  draw();
+}
+
+function saveArch(id) {
+  const title = document.getElementById('am_title')?.value.trim();
+  const desc  = document.getElementById('am_desc')?.value.trim();
+  if(!title) { toast('Archetype name is required','w'); return; }
+  const ico = S.archModal.selOn !== undefined ? S.archModal.selIco : (S.archModal.selIco||'🤖');
+  const on  = S.archModal.selOn !== undefined ? S.archModal.selOn : true;
+  if(id) {
+    const a = ARCHETYPES.find(x=>x.id===id);
+    if(a){ a.title=title; a.desc=desc; a.ico=S.archModal.selIco||a.ico; if(S.archModal.selOn!==undefined)a.on=S.archModal.selOn; }
+    toast(`Archetype "${title}" updated`);
+  } else {
+    ARCHETYPES.push({id:nextArchId++, ico:S.archModal.selIco||'🤖', title, desc, on});
+    toast(`Archetype "${title}" added`);
+  }
+  S.archModal = null; draw();
+}
+
+function deleteArch(id) {
+  const a = ARCHETYPES.find(x=>x.id===id);
+  if(!a) return;
+  S.modal='confirm';
+  S.modalData={title:'Remove Archetype?',msg:`"${a.title}" will be removed from this assessment.`,btnCls:'bdn',btnLbl:'Remove',
+    action:`ARCHETYPES.splice(ARCHETYPES.findIndex(x=>x.id===${id}),1);draw();toast('Archetype removed')`};
+  draw();
+}
+
+function toggleArchById(id, el) {
+  const a = ARCHETYPES.find(x=>x.id===id); if(!a) return;
+  a.on = !a.on;
+  el.classList.toggle('on'); el.textContent = a.on ? '✓' : '';
+  el.closest('.arch-card').classList.toggle('selected', a.on);
+}
+
+/* STEP 7 — Evaluation Summary */
+function s7HTML() {
+  const sym = S.currSym||'₹';
+  const ro = 'readonly class="fc fc-ro"';
+  return shell('Process Discovery', wizHead(7)+`
+    <div class="smets">
+      <div class="scard"><div class="sc-l">Overall Readiness Score</div><div class="sc-v">72%</div><div class="sc-s">Medium-High Readiness</div></div>
+      <div class="scard"><div class="sc-l">Estimated ROI</div><div class="sc-v">4.8×</div><div class="sc-s">Over 18-month horizon</div></div>
+      <div class="scard"><div class="sc-l">Implementation Complexity</div><div class="sc-v">Medium</div><div class="sc-s">8–12 weeks estimated</div></div>
+      <div class="scard"><div class="sc-l">Strategic Alignment</div><div class="sc-v">High</div><div class="sc-s">Aligned with digital ops goals</div></div>
+    </div>
+
+    <div class="ib ib-lock">
+      🔒 <strong>Evaluation Summary is read-only.</strong> All fields below are auto-generated by AI from your process data. Use the "Generate with AI" button to populate or refresh them.
+    </div>
+    <div class="ib ib-b">💱 All monetary values are in <strong>${sym} (${S.currCode||'INR'})</strong> as selected in Step 1.</div>
+
+    <div class="fcard">
+      <div class="fcard-hdr"><h4>📄 Evaluation Summary Report</h4>
+        <div style="display:flex;gap:7px">
+          <button class="btn bai bsm" onclick="toast('Generating full summary from all steps...','ok')">✨ Generate with AI</button>
+          <button class="btn bo bsm" onclick="toast('Preparing PDF export...','ok')">⬇️ Export PDF</button>
+        </div></div>
+
+      <div class="fr">
+        <div class="fg"><label>Process Area</label><input ${ro} value="Finance — Accounts Payable"></div>
+        <div class="fg"><label>Sub Process Name</label><input ${ro} value="Invoice-to-Payment (I2P)"></div>
+      </div>
+      <div class="fg"><label>Objective</label>
+        <textarea ${ro} rows="2">To automate the end-to-end AP invoice processing cycle — reducing manual effort, errors, and cycle time while improving vendor relationships and financial control.</textarea></div>
+      <div class="fr">
+        <div class="fg"><label>Key Challenges</label>
+          <textarea ${ro} rows="3">1. High manual data entry across 1,200+ monthly invoices
+2. 8.2% error rate causing payment delays and disputes
+3. SAP posting bottleneck requiring manual GL code entry</textarea></div>
+        <div class="fg"><label>Strategic Goal</label>
+          <textarea ${ro} rows="3">Transition to a touchless AP process aligned with SenzCraft SIMPLER framework — reducing cost-per-invoice by 70% and enabling real-time CFO-level financial dashboards.</textarea></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>AI Opportunity</label>
+          <textarea ${ro} rows="2">High potential for IDP-based invoice extraction (85% auto-classification), Agentic AI for end-to-end orchestration — delivering 75–80% touchless processing rate.</textarea></div>
+        <div class="fg"><label>Business Benefit (${sym})</label>
+          <textarea ${ro} rows="2">Annual savings: ${sym}28–32L FTE cost; ${sym}18.5L revenue leakage recovery; 4 FTE redeployment to strategic work; 90% reduction in late payment penalties.</textarea></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Volumetric Summary</label>
+          <textarea ${ro} rows="2">1,200 invoices/month · 4 FTEs · 15 min avg · 22 working days · ${sym}167 cost/transaction</textarea></div>
+        <div class="fg"><label>Data Readiness</label>
+          <textarea ${ro} rows="2">Medium-High — SAP data available and structured; email/PDF invoices require IDP extraction.</textarea></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Key Inputs</label>
+          <textarea ${ro} rows="2">Vendor invoices (PDF/email), Purchase Orders (SAP), Goods Receipt Notes, Approval matrix, Vendor master data</textarea></div>
+        <div class="fg"><label>Key Outputs</label>
+          <textarea ${ro} rows="2">Approved AP entries in SAP, Payment run schedule, Exception reports, AP aging dashboard, Vendor payment notifications</textarea></div>
+      </div>
+    </div>
+
+    <div class="cb">
+      <div>
+        <h4>✓ Mark Assessment as Complete</h4>
+        <p>Once marked complete, this assessment is locked — no further modifications can be made. The full report will be available for PDF download.</p>
+      </div>
+      <button class="btn bok" onclick="S.modal='confirm';S.modalData={title:'Mark as Complete?',msg:'Once marked complete, this assessment will be permanently locked. No further edits will be allowed. The full AI report will be downloadable as PDF.',btnCls:'bok',btnLbl:'✓ Confirm & Complete',action:&quot;toast('Assessment marked as Complete! Report ready for download. ✅');go('dashboard')&quot;};draw()">Mark as Complete</button>
+    </div>
+    <div class="ff">
+      <button class="btn bs" onclick="go('dashboard')">Cancel</button>
+      <div class="ff-r">
+        <button class="btn bs" onclick="go('discovery',{step:6})">← Previous</button>
+        <button class="btn bo bsm" onclick="toast('Preparing PDF report...','ok')">⬇️ Download Report</button>
+      </div>
+    </div>`);
+}
+
+/* ═══════════════════════════════════════════
+   REPORTS
+═══════════════════════════════════════════ */
+function reportsHTML() {
+  const done = DB.assessments.filter(a=>a.status==='Completed');
+  const RPT = [
+    {ico:'👥',bg:'bg-b',t:'Client Details Report',d:'Master list of all clients with contact info, industry, address, and assessment count.',cnt:DB.clients.length,u:'clients'},
+    {ico:'📋',bg:'bg-p',t:'Assessment Details Report',d:'Full breakdown of all assessments — status, step progress, start date, currency, and process owner.',cnt:DB.assessments.length,u:'assessments'},
+    {ico:'✅',bg:'bg-g',t:'Completed Assessments',d:'All assessments marked complete. Includes AI scores, ROI, and downloadable PDF reports.',cnt:done.length,u:'reports ready'},
+    {ico:'📊',bg:'bg-w',t:'AI Opportunity Summary',d:'Aggregated AI opportunity value, readiness scores, ROI, and complexity across all completed assessments.',cnt:1,u:'summary view'},
+    {ico:'🏭',bg:'bg-c',t:'Assessment by Industry',d:'Group assessments by client industry to identify AI adoption patterns across different sectors.',cnt:DB.clients.length,u:'industries'},
+    {ico:'🔄',bg:'bg-p',t:'In-Progress Assessments',d:'All assessments currently active — with step completion, assigned owner, and last saved timestamp.',cnt:DB.assessments.filter(a=>a.status==='In Progress').length,u:'in progress'}
+  ];
+  const tabs=['all','clients','assessments','completed'];
+  const tlbls=['All Reports','Client Reports','Assessment Reports','Completed Only'];
+  return shell('Reports',`
+    <div class="ph"><h2>Reports</h2><p>Generate and download AI process discovery reports across all clients and assessments</p></div>
+    <div class="adm-tabs">${tabs.map((t,i)=>`<div class="atab ${S.rptTab===t?'on':''}" onclick="S.rptTab='${t}';draw()">${tlbls[i]}</div>`).join('')}</div>
+    <div class="rpt-grid">
+      ${RPT.map(r=>`<div class="rpt-card" onclick="toast('Generating ${r.t}...','ok')">
+        <div class="rpt-ico ${r.bg}">${r.ico}</div>
+        <div class="rpt-tit">${r.t}</div>
+        <div class="rpt-desc">${r.d}</div>
+        <div class="rpt-foot">
+          <span class="rpt-cnt"><strong>${r.cnt}</strong> ${r.u}</span>
+          <button class="btn bo bsm" onclick="event.stopPropagation();toast('Exporting as PDF...','ok')">⬇️ Export</button>
+        </div>
+      </div>`).join('')}
+    </div>
+    <div class="shdiv"><h4>📋 Completed Assessment Reports</h4></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Client</th><th>Process Name</th><th>Process Area</th><th>Currency</th><th>Completed On</th><th>Readiness</th><th>ROI</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${done.length===0?`<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--tl)">No completed assessments yet. Complete an assessment to see reports here.</td></tr>`:''}
+        ${done.map(a=>`<tr>
+          <td><strong>${a.client}</strong></td>
+          <td>${a.process}</td>
+          <td><span style="font-size:12px;color:var(--tm)">${a.area}</span></td>
+          <td><span class="curr-badge">${a.sym} ${a.currency}</span></td>
+          <td><span style="font-size:12px">01 Mar 2025</span></td>
+          <td><span class="badge b-ok">72% Ready</span></td>
+          <td><span class="badge b-ip">4.8× ROI</span></td>
+          <td><div class="tacts">
+            <div class="tact" onclick="go('discovery',{step:7})">👁</div>
+            <button class="btn bo bsm" onclick="toast('Downloading full PDF report...','ok')">⬇️ PDF</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`);
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN PANEL
+═══════════════════════════════════════════ */
+function adminHTML() {
+  const tabs=['users','roles','activity'];
+  const tlbls=['👥 User Management','🔐 Role & Permissions','📋 Activity Log'];
+  let inner='';
+
+  if(S.adminTab==='users') {
+    inner=`
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-n">${DB.users.length}</div><div class="stat-l">Total Users</div></div>
+        <div class="stat-card"><div class="stat-n">${DB.users.filter(u=>u.status==='Active').length}</div><div class="stat-l">Active Users</div></div>
+        <div class="stat-card"><div class="stat-n">${[...new Set(DB.users.map(u=>u.role))].length}</div><div class="stat-l">Distinct Roles</div></div>
+      </div>
+      <div class="sh"><h3>All Users</h3>
+        <button class="btn bp bsm" onclick="S.modal='addUser';draw()">+ Add User</button></div>
+      <div class="uc-list">
+        ${DB.users.map(u=>`<div class="uc-card">
+          <div class="av" style="background:${u.clr}20;color:${u.clr};font-size:14px">${u.av}</div>
+          <div class="uc-info">
+            <div class="uc-nm">${u.name} ${u.status==='Inactive'?'<span style="font-size:10px;color:var(--tl);font-family:DM Sans">(Inactive)</span>':''}</div>
+            <div class="uc-em">${u.email} · Last active: ${u.last}</div>
+          </div>
+          <span class="rt ${u.role==='Admin'?'rt-a':u.role==='Process Owner'?'rt-p':'rt-v'}">${u.role}</span>
+          <div class="uc-acts">
+            <button class="btn bs bsm" onclick="S.modal='editUser';S.editUid=${u.id};draw()">✏️ Edit</button>
+            <button class="btn bs bsm" onclick="toast('Password reset email sent to ${u.email}','ok')">🔑 Reset Pwd</button>
+            ${u.status==='Active'
+              ?`<button class="btn bdanger bsm" onclick="DB.users.find(x=>x.id===${u.id}).status='Inactive';draw();toast('User deactivated','ok')">⛔ Deactivate</button>`
+              :`<button class="btn bok bsm" onclick="DB.users.find(x=>x.id===${u.id}).status='Active';draw();toast('User activated','ok')">✅ Activate</button>`}
+            <button class="btn bsm" style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA" onclick="deleteUser(${u.id})">🗑 Remove</button>
+          </div>
+        </div>`).join('')}
+      </div>`;
+
+  } else if(S.adminTab==='roles') {
+    inner=`
+      <div class="role-def-grid">
+        <div class="role-def" style="background:#FEF2F2;border:1px solid #FECACA">
+          <h5 style="color:#991B1B">🛡️ Admin</h5>
+          <p>Full access to all modules — user management, client management, all assessments, reports, admin panel configuration. Cannot be restricted.</p>
+        </div>
+        <div class="role-def" style="background:#EBF1FF;border:1px solid #BFDBFE">
+          <h5 style="color:#1D40AE">🔍 Process Owner</h5>
+          <p>Can initiate and manage assessments through all 7 steps. Can view dashboard and download reports. Cannot manage users, clients, or access admin panel.</p>
+        </div>
+        <div class="role-def" style="background:#E8FBF3;border:1px solid #6EE7B7">
+          <h5 style="color:#065F46">👁 Viewer</h5>
+          <p>Read-only access. Can view dashboard assessments and download completed reports. Cannot create, edit, or delete anything.</p>
+        </div>
+      </div>
+      <div class="perm-wrap">
+        <div class="perm-hdr">
+          <div class="perm-hdr-cell" style="text-align:left">Permission</div>
+          <div class="perm-hdr-cell">🛡️ Admin</div>
+          <div class="perm-hdr-cell">🔍 Process Owner</div>
+          <div class="perm-hdr-cell">👁 Viewer</div>
+        </div>
+        ${PERMS.map((p,i)=>`
+          <div class="perm-row">
+            <div class="perm-cell">
+              <div class="perm-nm">${p.nm}</div>
+              <div class="perm-desc">${p.desc}</div>
+            </div>
+            <div class="perm-cell" style="display:flex;justify-content:center">
+              <div class="toggle locked" title="Admin always has full access"></div>
+            </div>
+            <div class="perm-cell" style="display:flex;justify-content:center">
+              <div class="toggle ${DB.permState.po[i]?'on':'off'}" onclick="DB.permState.po[${i}]=!DB.permState.po[${i}];draw()"></div>
+            </div>
+            <div class="perm-cell" style="display:flex;justify-content:center">
+              <div class="toggle ${DB.permState.vw[i]?'on':'off'}" onclick="DB.permState.vw[${i}]=!DB.permState.vw[${i}];draw()"></div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:14px">
+        <button class="btn bp" onclick="toast('Permission settings saved successfully ✓')">💾 Save Permissions</button>
+      </div>`;
+
+  } else {
+    const LOGS=[
+      {ico:'🚀',bg:'bg-b',msg:`<strong>Murali D</strong> initiated new assessment for <strong>Ventora Pvt Ltd</strong> — AP Processing (INR ₹)`,t:'2 mins ago'},
+      {ico:'✅',bg:'bg-g',msg:`<strong>Deboleena K</strong> marked <strong>Payroll Processing</strong> as complete`,t:'1 hr ago'},
+      {ico:'👥',bg:'bg-p',msg:`<strong>Murali D (Admin)</strong> added new user <strong>Ravi Kumar</strong> as Process Owner`,t:'2 hrs ago'},
+      {ico:'🔐',bg:'bg-w',msg:`<strong>Murali D (Admin)</strong> updated Role & Permissions — toggled "Download Reports" for Viewer`,t:'3 hrs ago'},
+      {ico:'🏢',bg:'bg-b',msg:`<strong>Murali D</strong> added new client <strong>NovaTech Systems</strong> to client master`,t:'Yesterday, 4:15 PM'},
+      {ico:'✏️',bg:'bg-w',msg:`<strong>Ravi Kumar</strong> updated Activity Breakdown for <strong>KYC Process</strong> — Step 4`,t:'Yesterday, 2:30 PM'},
+      {ico:'📥',bg:'bg-g',msg:`<strong>Ananya Iyer</strong> downloaded PDF report for <strong>Payroll Processing</strong>`,t:'2 days ago'},
+      {ico:'⛔',bg:'bg-w',msg:`<strong>Murali D (Admin)</strong> deactivated user account <strong>preethi@senzcraft.com</strong>`,t:'2 weeks ago'}
+    ];
+    inner=`
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-n">24</div><div class="stat-l">Total Actions Today</div></div>
+        <div class="stat-card"><div class="stat-n">8</div><div class="stat-l">Assessments Modified</div></div>
+        <div class="stat-card"><div class="stat-n">3</div><div class="stat-l">Users Active Today</div></div>
+      </div>
+      <div class="sh"><h3>Recent Activity Log</h3>
+        <button class="btn bs bsm" onclick="toast('Exporting activity log as CSV...','ok')">⬇️ Export Log</button></div>
+      <div class="act-log">
+        ${LOGS.map(l=>`<div class="log-row">
+          <div class="log-ico ${l.bg}">${l.ico}</div>
+          <div class="log-msg">${l.msg}</div>
+          <div class="log-time">${l.t}</div>
+        </div>`).join('')}
+      </div>`;
+  }
+
+  return shell('Admin Panel',`
+    <div class="ph"><h2>Admin Panel</h2><p>Manage users, roles, permissions and monitor platform-wide activity</p></div>
+    <div class="adm-tabs">${tabs.map((t,i)=>`<div class="atab ${S.adminTab===t?'on':''}" onclick="S.adminTab='${t}';draw()">${tlbls[i]}</div>`).join('')}</div>
+    ${inner}`);
+}
+
+/* ═══════════════════════════════════════════
+   AI SIMULATE
+═══════════════════════════════════════════ */
+function aiSim(id) {
+  const el=document.getElementById(id); if(!el)return;
+  const orig=el.innerHTML;
+  el.innerHTML=`<div style="padding:44px;display:flex;flex-direction:column;align-items:center;gap:14px">
+    <div class="ai-ld"><div class="spin"></div>✨ AI is analysing your document and extracting process details...</div>
+    <p style="font-size:12px;color:var(--tm)">This may take a few moments</p>
+  </div>`;
+  setTimeout(()=>{ el.innerHTML=orig; toast('✨ AI has populated all available fields from your document!'); }, 2400);
+}
+
+/* ═══════════════════════════════════════════
+   ROUTER + DRAW
+═══════════════════════════════════════════ */
+function draw() {
+  const app=document.getElementById('app');
+  if(S.screen==='login'){app.innerHTML=loginHTML();return;}
+  const pages={dashboard:dashHTML,clients:clientsHTML,reports:reportsHTML,admin:adminHTML};
+  if(pages[S.screen]){app.innerHTML=pages[S.screen]();return;}
+  if(S.screen==='discovery'){
+    const m=[null,s1HTML,s2HTML,s3HTML,s4HTML,s5HTML,s6HTML,s7HTML];
+    app.innerHTML=(m[S.step]||s1HTML)();return;
+  }
+  app.innerHTML=dashHTML();
+}
+
+/* ═══════════════════════════════════════════
+   HELPER FUNCTIONS — Goals, Tags, Archetypes
+═══════════════════════════════════════════ */
+function handleFreqChange(){const s=document.getElementById('procFreq'),w=document.getElementById('adhocWrap');if(s&&w)w.style.display=s.value==='Ad-hoc'?'block':'none';}
+function addGoal(){const list=document.getElementById('goalsList');if(!list)return;const count=list.querySelectorAll('.goal-row').length+1;const row=document.createElement('div');row.className='goal-row';row.style.cssText='display:flex;align-items:center;gap:6px';row.innerHTML=`<span style="width:20px;height:20px;border-radius:50%;background:var(--bl);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${count}</span><input class="fc" style="flex:1" placeholder="Enter goal or outcome..."><div class="tact del" onclick="removeGoal(this)" title="Remove">✕</div>`;list.appendChild(row);row.querySelector('input').focus();}
+function removeGoal(btn){const row=btn.closest('.goal-row');if(!row)return;const list=row.parentElement;row.remove();list.querySelectorAll('.goal-row span:first-child').forEach((s,i)=>s.textContent=i+1);}
+const SYS_MASTER=['SAP S/4HANA','SAP ECC','Oracle ERP','Microsoft Dynamics','Salesforce','ServiceNow','Workday','Microsoft Outlook','SharePoint','Teams','Excel','Power BI','Power Automate','Jira','Confluence','Esker','Coupa','Ariba','Concur','DocuSign','Zendesk','Freshservice','Monday.com','Asana','Slack'];
+function handleTagKey(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const val=e.target.value.trim().replace(/,$/,'');if(val)addTag(val);e.target.value='';hideTagSuggest();}}
+function addTag(val){const c=document.getElementById('tagContainer'),inp=document.getElementById('tagInput');if(!c||!inp)return;const ex=[...c.querySelectorAll('.sys-tag')].map(t=>t.textContent.replace('✕','').trim());if(ex.includes(val))return;const tag=document.createElement('span');tag.className='sys-tag';tag.innerHTML=`${val} <span onclick="removeTag(this)" style="cursor:pointer;margin-left:4px;opacity:.6">✕</span>`;c.insertBefore(tag,inp);}
+function removeTag(x){x.closest('.sys-tag').remove();}
+function showTagSuggest(val){const box=document.getElementById('tagSuggest'),inp=document.getElementById('tagInput');if(!box||!inp||!val){hideTagSuggest();return;}const matches=SYS_MASTER.filter(s=>s.toLowerCase().includes(val.toLowerCase())).slice(0,6);if(!matches.length&&val.length<2){hideTagSuggest();return;}const items=matches.map(m=>`<div class="tag-suggest-item" onmousedown="addTag('${m}');document.getElementById('tagInput').value='';hideTagSuggest()">${m}</div>`).join('');const newItem=!SYS_MASTER.some(s=>s.toLowerCase()===val.toLowerCase())?`<div class="tag-suggest-item tag-suggest-new" onmousedown="addTag('${val}');document.getElementById('tagInput').value='';hideTagSuggest()">＋ Add "${val}"</div>`:'';box.innerHTML=items+newItem;const cr=document.getElementById('tagContainer')?.getBoundingClientRect();if(cr)box.style.cssText=`display:block;position:fixed;left:${cr.left}px;top:${cr.bottom+4}px;width:${cr.width}px;background:#fff;border:1.5px solid var(--br);border-radius:var(--rm);box-shadow:var(--sm);z-index:9000`;}
+function hideTagSuggest(){const box=document.getElementById('tagSuggest');if(box)box.style.display='none';}
+// GSDA item helpers — add, update (inline edit), delete
+function addGSDAItem(k) {
+  GSDA[k].push('');
+  draw();
+  // Focus the new input after render
+  setTimeout(() => {
+    const body = document.getElementById('gbody_' + k);
+    if (!body) {
+      // fallback: find all inputs in gsda-body sections and focus last one for this section
+      const allBodies = document.querySelectorAll('.gsda-body');
+      const kMap = {goals:0, signals:1, decisions:2, actions:3};
+      const b = allBodies[kMap[k]];
+      if (b) { const inputs = b.querySelectorAll('input'); if(inputs.length) inputs[inputs.length-1].focus(); }
+      return;
+    }
+    const inputs = body.querySelectorAll('input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }, 50);
+}
+
+function updateGSDA(k, i, val) {
+  if (GSDA[k]) GSDA[k][i] = val;
+}
+
+function deleteGSDAItem(k, i) {
+  if (!GSDA[k]) return;
+  GSDA[k].splice(i, 1);
+  draw();
+}
+
+function toggleArchById(id,el){const a=ARCHETYPES.find(x=>x.id===id);if(!a)return;a.on=!a.on;el.classList.toggle('on');el.textContent=a.on?'✓':'';el.closest('.arch-card').classList.toggle('selected',a.on);}
+
+// File upload handlers
+function handleFileSelect(input){const list=document.getElementById('fileList');if(!list||!input.files.length)return;[...input.files].forEach(file=>{const sizeMB=(file.size/(1024*1024)).toFixed(1);const ext=file.name.split('.').pop().toUpperCase();const clr={PDF:'#E03A3A',DOCX:'#1D5FD4',PPTX:'#F0A500'}[ext]||'#576A8A';const row=document.createElement('div');row.className='ufile';row.innerHTML=`<span style="background:${clr}20;color:${clr};border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700">${ext}</span><strong style="flex:1">${file.name}</strong><span style="color:var(--tl)">${sizeMB} MB</span><span class="badge b-ip" style="margin-left:6px">Pending upload</span><div class="tact del" onclick="removeFile(this)" title="Remove" style="margin-left:6px">✕</div>`;list.appendChild(row);});input.value='';}
+
+function removeFile(btn){btn.closest('.ufile').remove();const list=document.getElementById('fileList'),wrap=document.getElementById('uploadBtnWrap');if(list&&wrap&&list.querySelectorAll('.ufile').length===0)wrap.style.display='none';}
+
+function uploadFiles(){const list=document.getElementById('fileList'),btn=document.getElementById('uploadBtn'),stat=document.getElementById('uploadStatus');if(!list)return;const pending=list.querySelectorAll('.b-ip');if(!pending.length){toast('No new files to upload','w');return;}btn.disabled=true;btn.innerHTML='<span class="spin" style="width:13px;height:13px;border-width:2px;margin-right:4px"></span> Uploading...';if(stat)stat.textContent='';let done=0;pending.forEach((badge,i)=>{setTimeout(()=>{badge.className='badge b-ok';badge.textContent='✓ Uploaded';done++;if(done===pending.length){btn.disabled=false;btn.innerHTML='⬆️ Upload Files';if(stat)stat.textContent=`✓ ${done} file${done>1?'s':''} uploaded successfully`;toast(`${done} file${done>1?'s':''} uploaded successfully!`);setTimeout(()=>{if(stat)stat.textContent='';},4000);}},800+i*500);});}
+
+draw();
+</script>
+</body>
+</html>

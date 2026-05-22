@@ -1,0 +1,35 @@
+# Python venv (local only — use requirements.txt)
+aura-s/
+
+# Duplicate / nested repos
+aura-platform/
+aura-platform - Copy/
+
+# Secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+ngrok.env
+draft.py
+
+# Backend
+Aura Platform Backend/.env
+Aura Platform Backend/__pycache__/
+Aura Platform Backend/**/__pycache__/
+
+# Frontend
+Aura Platform Frontend/node_modules/
+Aura Platform Frontend/.next/
+Aura Platform Frontend/.env.local
+Aura Platform Frontend/.env*.local
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.cursor/
+*.log
+
+# Build
+dist/
+build/
