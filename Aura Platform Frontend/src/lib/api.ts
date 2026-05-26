@@ -6,6 +6,10 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
+  // localtunnel shows a browser warning page without this header
+  if (config.baseURL?.includes("loca.lt")) {
+    config.headers["Bypass-Tunnel-Reminder"] = "true"
+  }
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token")
     if (token) config.headers.Authorization = `Bearer ${token}`
@@ -48,6 +52,8 @@ export const processAPI = {
     api.get("/api/v1/process", { params }),
   getOne: (id: string) => api.get(`/api/v1/process/${id}`),
   customerInfo: (data: unknown) => api.post("/api/v1/process/customer-info", data),
+  saveCustomerInfo: (id: string, data: unknown) =>
+    api.post(`/api/v1/process/${id}/customer-info`, data),
   processEntry: (id: string, data: unknown) =>
     api.post(`/api/v1/process/${id}/process-entry`, data),
   processDetails: (id: string, data: unknown) =>
@@ -64,13 +70,25 @@ export const processAPI = {
     api.post(`/api/v1/process/${id}/archetype-generation`),
   saveArchetypes: (id: string, data: unknown) =>
     api.post(`/api/v1/process/${id}/archetype-selection`, data),
-  generateSummary: (id: string) =>
-    api.post(`/api/v1/process/${id}/generate-summary`),
+  generateSummary: (
+    id: string,
+    data?: { report_fields?: Record<string, string>; payback?: Record<string, unknown> }
+  ) => api.post(`/api/v1/process/${id}/generate-summary`, data || {}),
+  saveEvaluationSummary: (
+    id: string,
+    data: { report_fields?: Record<string, string>; payback?: Record<string, unknown> }
+  ) => api.post(`/api/v1/process/${id}/evaluation-summary`, data),
   complete: (id: string) => api.post(`/api/v1/process/${id}/complete`),
   uploadContext: (id: string, form: FormData) =>
     api.post(`/api/v1/process/${id}/upload-context-file`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+  generateProcessEntry: (id: string) =>
+    api.post(`/api/v1/process/${id}/process-entry/generate`),
+  generateVolumetrics: (id: string) =>
+    api.post(`/api/v1/process/${id}/process-details/generate`),
+  generateTechStack: (id: string) =>
+    api.post(`/api/v1/process/${id}/technology-stack/generate`),
   uploadActivityFile: (id: string, form: FormData) =>
     api.post(`/api/v1/process/${id}/activity-breakdown/upload`, form, {
       headers: { "Content-Type": "multipart/form-data" },

@@ -1,264 +1,338 @@
 "use client"
-import { useState } from "react"
-import { useRouter, useParams } from "next/navigation"
-import StepperBar from "@/components/process/StepperBar"
+
+import { useState, useEffect, useMemo } from "react"
+import ProcessStepShell from "@/components/process/ProcessStepShell"
+import {
+  StepSectionHeader,
+  InfoBanner,
+  InputWithSuffix,
+  FormTextarea,
+  FieldLabel,
+} from "@/components/process/processFormUi"
 import { processAPI } from "@/lib/api"
+import { useProcessWizard } from "@/hooks/useProcessWizard"
+import { processContextKey } from "@/lib/processContext"
+
+type NumField = number | ""
+
+const defaultForm = () => ({
+  monthly_transaction_volume: "" as NumField,
+  transaction_volume_unit: "Invoices",
+  avg_time_per_transaction_mins: "" as NumField,
+  processing_time_unit: "minutes",
+  fte_count: "" as NumField,
+  fte_cost_annual: "" as NumField,
+  hours_spent_per_day: "" as NumField,
+  working_days_per_month: "" as NumField,
+  current_error_rate_pct: "" as NumField,
+  business_impact_errors_monthly: "" as NumField,
+  revenue_leakage: "" as NumField,
+  sla_breach_rate_pct: "" as NumField,
+  non_prime_transactions_monthly: "" as NumField,
+  process_observations: "",
+  key_improvement_areas: "",
+})
+
+const num = (v: NumField) => (v === "" ? 0 : Number(v))
+
+const mapFromApi = (s3: Record<string, unknown>) => ({
+  monthly_transaction_volume: (s3.monthly_transaction_volume as number) || ("" as NumField),
+  transaction_volume_unit: (s3.transaction_volume_unit as string) || "Invoices",
+  avg_time_per_transaction_mins: (s3.avg_time_per_transaction_mins as number) || ("" as NumField),
+  processing_time_unit: (s3.processing_time_unit as string) || "minutes",
+  fte_count: (s3.fte_count as number) || ("" as NumField),
+  fte_cost_annual: (s3.fte_cost_annual as number) || ("" as NumField),
+  hours_spent_per_day: (s3.hours_spent_per_day as number) || ("" as NumField),
+  working_days_per_month: (s3.working_days_per_month as number) || ("" as NumField),
+  current_error_rate_pct:
+    (s3.current_error_rate_pct as number) || (s3.delay_impact_on_revenue_pct as number) || ("" as NumField),
+  business_impact_errors_monthly: (s3.business_impact_errors_monthly as number) || ("" as NumField),
+  revenue_leakage: (s3.revenue_leakage as number) || ("" as NumField),
+  sla_breach_rate_pct: (s3.sla_breach_rate_pct as number) || ("" as NumField),
+  non_prime_transactions_monthly:
+    (s3.non_prime_transactions_monthly as number) ||
+    (s3.risk_prone_transactions_count as number) ||
+    ("" as NumField),
+  process_observations: (s3.process_observations as string) || (s3.key_improvement_areas as string) || "",
+  key_improvement_areas: (s3.key_improvement_areas as string) || "",
+})
 
 export default function ProcessVolumetrics() {
-  const router = useRouter()
-  const { id } = useParams()
-  const [form, setForm] = useState({
-    // Pain Points
-    key_challenges: ["", "", ""],
-    key_improvement_areas: "",
-    // Volumetrics — Cost
-    monthly_transaction_volume: 0,
-    fte_count: 0,
-    avg_time_per_transaction_mins: 0,
-    // Revenue
-    avg_revenue_per_transaction: 0,
-    revenue_leakage: 0,
-    delay_impact_on_revenue_pct: 0,
-    // Risk
-    risk_prone_transactions_count: 0,
-    avg_financial_risk_per_txn: 0,
-    sla_breach_rate_pct: 0,
-    // Success Metrics
-    success_metrics: [
-      { kpi: "Cycle Time", current: "", target: "" },
-      { kpi: "Accuracy %", current: "", target: "" },
-      { kpi: "Errors/month", current: "", target: "" },
-    ]
-  })
-  const [error, setError]     = useState("")
-  const [loading, setLoading] = useState(false)
+  const w = useProcessWizard()
+  const [form, setForm] = useState(defaultForm())
+  const [autoLoading, setAutoLoading] = useState(true)
 
-  // Annual Cost Estimate
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      setAutoLoading(true)
+      w.setError("")
+      try {
+        const p = await w.loadProcess()
+        const s1 = p.steps_data?.step1
+        const s2 = p.steps_data?.step2
+        const s3 = p.steps_data?.step3
+        const key = processContextKey(s1, s2)
+        const cacheKey = `aura-s3-${w.processId}`
+        const cached = typeof window !== "undefined" ? sessionStorage.getItem(cacheKey) : null
+        const hasData = s3 && num(mapFromApi(s3).fte_count as NumField) > 0
+
+        if (hasData && cached === key) {
+          if (!cancelled) setForm(mapFromApi(s3))
+        } else {
+          const res = await processAPI.generateVolumetrics(w.processId)
+          if (!cancelled) setForm(mapFromApi(res.data.step3 || {}))
+          if (typeof window !== "undefined") sessionStorage.setItem(cacheKey, key)
+        }
+      } catch {
+        if (!cancelled) w.setError("Could not load volumetrics")
+      }
+      if (!cancelled) setAutoLoading(false)
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [w.processId])
+
+  const sym = w.currency === "INR" ? "₹" : w.currency === "USD" ? "$" : w.currency
+
+  const costPerTransaction = useMemo(() => {
+    const volume = num(form.monthly_transaction_volume)
+    const fteAnnual = num(form.fte_cost_annual)
+    if (volume <= 0 || fteAnnual <= 0) return ""
+    return Math.round(fteAnnual / 12 / volume)
+  }, [form.monthly_transaction_volume, form.fte_cost_annual])
+
+  const financialRiskPerTxn = useMemo(() => {
+    const impact = num(form.business_impact_errors_monthly)
+    const riskTxns = num(form.non_prime_transactions_monthly)
+    if (impact <= 0 || riskTxns <= 0) return ""
+    return Math.round(impact / riskTxns)
+  }, [form.business_impact_errors_monthly, form.non_prime_transactions_monthly])
+
   const annualCost = (
-    form.fte_count * 600000 * (form.avg_time_per_transaction_mins / 480)
+    num(form.fte_count) * (num(form.fte_cost_annual) / Math.max(num(form.fte_count), 1)) * 0.25
   ).toFixed(0)
 
-  const handleNext = async () => {
-      if (form.fte_count <= 0) { setError("FTE count must be greater than 0"); return }
-      if (form.sla_breach_rate_pct < 0 || form.sla_breach_rate_pct > 100) {
-        setError("SLA breach rate must be between 0–100"); return
-      }
-
-      setLoading(true)
-      setError("")
-      try {
-        await processAPI.processDetails(id as string, {
-          ...form,
-          annual_cost_estimate: Number(annualCost)
-        })
-        router.push(`/process/${id}/step/4`)
-      } catch (e: any) {
-        const detail = e.response?.data?.detail
-        if (Array.isArray(detail)) {
-          setError(detail[0]?.msg || "Validation error")
-        } else {
-          setError(detail || "Something went wrong")
-        }
-      }
-      setLoading(false)
+  const validate = () => {
+    if (num(form.fte_count) <= 0) {
+      w.setError("FTE count must be greater than 0")
+      return false
     }
+    const sla = num(form.sla_breach_rate_pct)
+    if (form.sla_breach_rate_pct !== "" && (sla < 0 || sla > 100)) {
+      w.setError("SLA breach rate must be between 0–100")
+      return false
+    }
+    return true
+  }
+
+  const buildPayload = () => ({
+    monthly_transaction_volume: num(form.monthly_transaction_volume),
+    transaction_volume_unit: form.transaction_volume_unit,
+    avg_time_per_transaction_mins: num(form.avg_time_per_transaction_mins),
+    processing_time_unit: form.processing_time_unit,
+    fte_count: num(form.fte_count),
+    fte_cost_annual: num(form.fte_cost_annual),
+    cost_per_transaction: costPerTransaction === "" ? 0 : costPerTransaction,
+    hours_spent_per_day: num(form.hours_spent_per_day),
+    working_days_per_month: num(form.working_days_per_month) || 22,
+    current_error_rate_pct: num(form.current_error_rate_pct),
+    business_impact_errors_monthly: num(form.business_impact_errors_monthly),
+    revenue_leakage: num(form.revenue_leakage),
+    sla_breach_rate_pct: num(form.sla_breach_rate_pct),
+    non_prime_transactions_monthly: num(form.non_prime_transactions_monthly),
+    avg_financial_risk_per_txn: financialRiskPerTxn === "" ? 0 : financialRiskPerTxn,
+    process_observations: form.process_observations,
+    key_challenges: [],
+    key_improvement_areas: form.process_observations || form.key_improvement_areas,
+    avg_revenue_per_transaction: costPerTransaction === "" ? 0 : costPerTransaction,
+    delay_impact_on_revenue_pct: num(form.current_error_rate_pct),
+    risk_prone_transactions_count: num(form.non_prime_transactions_monthly),
+    annual_cost_estimate: Number(annualCost),
+    success_metrics: [],
+  })
+
+  const persist = async () => {
+    await processAPI.processDetails(w.processId, buildPayload())
+  }
+
+  const handleSave = async () => {
+    if (!validate()) return
+    w.setSaving(true)
+    w.setError("")
+    try {
+      await persist()
+      w.flashSuccess()
+    } catch (e: unknown) {
+      w.setApiError(e, "Save failed")
+    }
+    w.setSaving(false)
+  }
+
+  const handleNext = async () => {
+    if (!validate()) return
+    w.setLoading(true)
+    w.setError("")
+    try {
+      await persist()
+      w.goNext(4)
+    } catch (e: unknown) {
+      w.setApiError(e, "Error")
+    }
+    w.setLoading(false)
+  }
+
+  const setNum = (key: keyof typeof form, v: string) =>
+    setForm({ ...form, [key]: v === "" ? "" : Number(v) })
+
+  const display = (v: NumField) => (v === "" ? "" : String(v))
+
+  if (autoLoading) {
+    return (
+      <ProcessStepShell
+        step={3}
+        currency={w.currency}
+        onCancel={w.onCancel}
+        onPrevious={() => w.goPrevious(2)}
+        onSave={() => {}}
+        onNext={() => {}}
+      >
+        <p className="text-center text-blue-600 py-12">🤖 Generating volumetrics from prior steps...</p>
+      </ProcessStepShell>
+    )
+  }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <StepperBar current={3}/>
-      <div className="bg-white rounded-xl border p-6 mt-4 space-y-6">
-        <h2 className="text-lg font-bold">Process Volumetrics & Pain Points</h2>
+    <ProcessStepShell
+      step={3}
+      currency={w.currency}
+      error={w.error}
+      success={w.success}
+      onCancel={w.onCancel}
+      onPrevious={() => w.goPrevious(2)}
+      onSave={handleSave}
+      onNext={handleNext}
+      loading={w.loading}
+      saving={w.saving}
+    >
+      <StepSectionHeader
+        title="Volumetrics & KPIs"
+        subtitle="Quantify process volume, cost, and risk metrics."
+      />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
+      <InfoBanner variant="yellow">
+        AI has pre-filled available fields based on your uploaded documents. Please validate and
+        fill any missing values.
+      </InfoBanner>
+      <InfoBanner variant="blue">
+        All monetary fields use {w.currency} ({sym}) as selected in Step 1.
+      </InfoBanner>
 
-        {/* Key Challenges */}
-        <div>
-          <label className="text-sm font-medium text-slate-700 mb-2 block">
-            🔴 Key Challenges *
-          </label>
-          {form.key_challenges.map((c, i) => (
-            <input key={i} value={c}
-              placeholder={`Challenge ${i + 1} — e.g. High volume, poor PO matching`}
-              className="w-full border rounded-lg p-2 text-sm mb-2"
-              onChange={e => {
-                const updated = [...form.key_challenges]
-                updated[i] = e.target.value
-                setForm({...form, key_challenges: updated})
-              }}/>
-          ))}
-          <button onClick={() => setForm({...form, key_challenges: [...form.key_challenges, ""]})}
-            className="text-blue-600 text-xs hover:underline">
-            + Add Challenge
-          </button>
-        </div>
-
-        {/* Cost Metrics */}
-        <div>
-          <label className="text-sm font-medium text-slate-700 mb-3 block">
-            💰 Cost Metrics
-          </label>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Monthly Transaction Volume</label>
-              <input type="number" min={0} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, monthly_transaction_volume: Number(e.target.value)})}/>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">FTE Count *</label>
-              <input type="number" min={0} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, fte_count: Number(e.target.value)})}/>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Avg Time per Transaction (mins)</label>
-              <input type="number" min={0} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, avg_time_per_transaction_mins: Number(e.target.value)})}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Revenue Metrics */}
-        <div>
-          <label className="text-sm font-medium text-slate-700 mb-3 block">
-            📈 Revenue Metrics
-          </label>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Avg Revenue per Transaction *</label>
-              <input type="number" min={0} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, avg_revenue_per_transaction: Number(e.target.value)})}/>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Revenue Leakage (Annual)</label>
-              <input type="number" min={0} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, revenue_leakage: Number(e.target.value)})}/>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Delay Impact on Revenue (%)</label>
-              <input type="number" min={0} max={100} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, delay_impact_on_revenue_pct: Number(e.target.value)})}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Risk Metrics */}
-        <div>
-          <label className="text-sm font-medium text-slate-700 mb-3 block">
-            ⚠️ Risk Metrics
-          </label>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Risk-prone Transactions/month</label>
-              <input type="number" min={0} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, risk_prone_transactions_count: Number(e.target.value)})}/>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Avg Financial Risk per Txn (₹)</label>
-              <input type="number" min={0} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, avg_financial_risk_per_txn: Number(e.target.value)})}/>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">SLA Breach Rate (%) *</label>
-              <input type="number" min={0} max={100} placeholder="0"
-                className="w-full border rounded-lg p-2 text-sm"
-                onChange={e => setForm({...form, sla_breach_rate_pct: Number(e.target.value)})}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Success Metrics Table */}
-        <div>
-          <label className="text-sm font-medium text-slate-700 mb-3 block">
-            🎯 Success Metrics
-          </label>
-          <table className="w-full text-sm border rounded-lg overflow-hidden">
-            <thead className="bg-slate-50 border-b">
-              <tr>
-                {["KPI","Current Value","Target Value"]
-                  .map(h => <th key={h} className="text-left px-3 py-2 text-xs font-medium text-slate-500">{h}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {form.success_metrics.map((m, i) => (
-                <tr key={i} className="border-b">
-                  <td className="px-2 py-2">
-                    <input value={m.kpi}
-                      className="w-full border rounded p-1 text-sm"
-                      onChange={e => {
-                        const updated = [...form.success_metrics]
-                        updated[i] = {...updated[i], kpi: e.target.value}
-                        setForm({...form, success_metrics: updated})
-                      }}/>
-                  </td>
-                  <td className="px-2 py-2">
-                    <input value={m.current} placeholder="e.g. 5 days"
-                      className="w-full border rounded p-1 text-sm"
-                      onChange={e => {
-                        const updated = [...form.success_metrics]
-                        updated[i] = {...updated[i], current: e.target.value}
-                        setForm({...form, success_metrics: updated})
-                      }}/>
-                  </td>
-                  <td className="px-2 py-2">
-                    <input value={m.target} placeholder="e.g. 2 days"
-                      className="w-full border rounded p-1 text-sm"
-                      onChange={e => {
-                        const updated = [...form.success_metrics]
-                        updated[i] = {...updated[i], target: e.target.value}
-                        setForm({...form, success_metrics: updated})
-                      }}/>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button onClick={() => setForm({...form, success_metrics: [...form.success_metrics, {kpi:"",current:"",target:""}]})}
-            className="text-blue-600 text-xs hover:underline mt-2">
-            + Add KPI
-          </button>
-        </div>
-
-        {/* Key Improvement Areas */}
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">Key Improvement Areas</label>
-          <textarea placeholder="e.g. Auto classification, GL code validation..."
-            rows={2} className="w-full border rounded-lg p-2 text-sm resize-none"
-            onChange={e => setForm({...form, key_improvement_areas: e.target.value})}/>
-        </div>
-
-        {/* Annual Cost Card */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-xs text-blue-500 font-medium">Annual Cost Estimate</p>
-          <p className="text-2xl font-bold text-blue-700">
-            ₹ {Number(annualCost).toLocaleString("en-IN")}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">
-            Based on FTE count × avg salary ÷ working hours
-          </p>
-        </div>
-
-        <div className="flex justify-between pt-2">
-          <button onClick={() => router.back()}
-            className="border px-6 py-2 rounded-lg text-sm hover:bg-slate-50">
-            ← Back
-          </button>
-          <button onClick={handleNext} disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
-            {loading ? "Saving..." : "Next →"}
-          </button>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <InputWithSuffix
+          label="Transaction Volume (per month)"
+          value={display(form.monthly_transaction_volume)}
+          onChange={(v) => setNum("monthly_transaction_volume", v)}
+          suffix={form.transaction_volume_unit}
+          suffixOptions={["Invoices", "Orders", "Transactions", "Cases"]}
+          onSuffixChange={(v) => setForm({ ...form, transaction_volume_unit: v })}
+        />
+        <InputWithSuffix
+          label="Processing Time (per transaction)"
+          value={display(form.avg_time_per_transaction_mins)}
+          onChange={(v) => setNum("avg_time_per_transaction_mins", v)}
+          suffix={form.processing_time_unit}
+          suffixOptions={["minutes", "hours", "days"]}
+          onSuffixChange={(v) => setForm({ ...form, processing_time_unit: v })}
+        />
+        <InputWithSuffix
+          label="FTE Count"
+          required
+          value={display(form.fte_count)}
+          onChange={(v) => setNum("fte_count", v)}
+          suffix="FTEs"
+        />
+        <InputWithSuffix
+          label="FTE Cost (Annual)"
+          required
+          value={display(form.fte_cost_annual)}
+          onChange={(v) => setNum("fte_cost_annual", v)}
+          suffix={sym}
+        />
+        <InputWithSuffix
+          label="Cost Per Transaction"
+          value={costPerTransaction === "" ? "" : String(costPerTransaction)}
+          suffix={sym}
+          readOnly
+        />
+        <InputWithSuffix
+          label="Hours Spent Per Day"
+          value={display(form.hours_spent_per_day)}
+          onChange={(v) => setNum("hours_spent_per_day", v)}
+          suffix="Hrs"
+        />
+        <InputWithSuffix
+          label="Working Days / Month"
+          value={display(form.working_days_per_month)}
+          onChange={(v) => setNum("working_days_per_month", v)}
+          suffix="days"
+        />
+        <InputWithSuffix
+          label="Current Error Rate"
+          value={display(form.current_error_rate_pct)}
+          onChange={(v) => setNum("current_error_rate_pct", v)}
+          suffix="%"
+        />
+        <InputWithSuffix
+          label={`Business Impact of Errors (${sym} / month)`}
+          value={display(form.business_impact_errors_monthly)}
+          onChange={(v) => setNum("business_impact_errors_monthly", v)}
+          suffix={sym}
+        />
       </div>
-    </div>
+
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 pt-2">
+        Revenue & Tax (Optional)
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <InputWithSuffix
+          label={`Revenue Leakage (Annual) ${sym}`}
+          value={display(form.revenue_leakage)}
+          onChange={(v) => setNum("revenue_leakage", v)}
+          suffix={sym}
+        />
+        <InputWithSuffix
+          label="SLA Breach Rate"
+          value={display(form.sla_breach_rate_pct)}
+          onChange={(v) => setNum("sla_breach_rate_pct", v)}
+          suffix="%"
+        />
+        <InputWithSuffix
+          label="Non-Prime Transactions / Month"
+          value={display(form.non_prime_transactions_monthly)}
+          onChange={(v) => setNum("non_prime_transactions_monthly", v)}
+          suffix="Transactions"
+        />
+      </div>
+
+      <InputWithSuffix
+        label={`Annual Financial Risk (Per Transaction) ${sym}`}
+        value={financialRiskPerTxn === "" ? "" : String(financialRiskPerTxn)}
+        suffix={sym}
+        readOnly
+      />
+
+      <div>
+        <FieldLabel>Process Observations & Context</FieldLabel>
+        <FormTextarea
+          rows={4}
+          placeholder="Draft: Peak loads, manual workarounds, bottlenecks..."
+          value={form.process_observations}
+          onChange={(e) => setForm({ ...form, process_observations: e.target.value })}
+        />
+      </div>
+    </ProcessStepShell>
   )
 }

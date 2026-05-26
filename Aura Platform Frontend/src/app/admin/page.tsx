@@ -1,8 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { adminAPI } from "@/lib/api"
-import { getStoredUser } from "@/lib/auth"
-
+import { getApiErrorMessage } from "@/lib/apiError"
 export default function AdminPanel() {
   const [users, setUsers]     = useState<any[]>([])
   const [logs, setLogs]       = useState<any[]>([])
@@ -45,7 +44,7 @@ export default function AdminPanel() {
       setForm({ email: "", full_name: "", password: "", role: "analyst" })
       fetchData()
     } catch (e: any) {
-      setError(e.response?.data?.detail || "Failed to create user")
+      setError(getApiErrorMessage(e, "Failed to create user"))
     }
   }
 
@@ -59,6 +58,9 @@ export default function AdminPanel() {
     analyst: "bg-blue-100 text-blue-700",
     viewer:  "bg-slate-100 text-slate-600",
   }
+
+  const userTopBorder = (is_active: boolean) =>
+    is_active ? "border-t-emerald-500" : "border-t-slate-300"
 
   if (loading) return <div className="p-8 text-slate-400">Loading...</div>
 
@@ -99,142 +101,201 @@ export default function AdminPanel() {
 
       {/* Users Tab */}
       {tab === "users" && (
-        <div className="bg-white rounded-xl border shadow-sm">
-          <div className="flex justify-between items-center px-4 py-3 border-b">
-            <span className="font-medium">All Users ({users.length})</span>
-            <button onClick={() => setShowAdd(!showAdd)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 px-1">
+            <span className="font-medium text-slate-800">All Users ({users.length})</span>
+            <button
+              type="button"
+              onClick={() => setShowAdd(!showAdd)}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+            >
               + Add User
             </button>
           </div>
 
-          {/* Add User Form */}
           {showAdd && (
-            <div className="p-4 bg-slate-50 border-b space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <input placeholder="Full Name *"
-                  className="border rounded-lg p-2 text-sm"
-                  onChange={e => setForm({...form, full_name: e.target.value})}/>
-                <input placeholder="Email *" type="email"
-                  className="border rounded-lg p-2 text-sm"
-                  onChange={e => setForm({...form, email: e.target.value})}/>
-                <input placeholder="Password *" type="password"
-                  className="border rounded-lg p-2 text-sm"
-                  onChange={e => setForm({...form, password: e.target.value})}/>
-                <select className="border rounded-lg p-2 text-sm"
-                  onChange={e => setForm({...form, role: e.target.value})}>
+            <div className="mb-4 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <input
+                  placeholder="Full Name *"
+                  className="rounded-lg border p-2 text-sm"
+                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                />
+                <input
+                  placeholder="Email *"
+                  type="email"
+                  className="rounded-lg border p-2 text-sm"
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
+                <input
+                  placeholder="Password *"
+                  type="password"
+                  className="rounded-lg border p-2 text-sm"
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                />
+                <select
+                  className="rounded-lg border p-2 text-sm"
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                >
                   <option value="analyst">Analyst</option>
                   <option value="viewer">Viewer</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
               <div className="flex gap-2">
-                <button onClick={handleAddUser}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                <button
+                  type="button"
+                  onClick={handleAddUser}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                >
                   Create User
                 </button>
-                <button onClick={() => setShowAdd(false)}
-                  className="border px-4 py-2 rounded-lg text-sm hover:bg-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAdd(false)}
+                  className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-100"
+                >
                   Cancel
                 </button>
               </div>
             </div>
           )}
 
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b">
-              <tr>
-                {["Name","Email","Role","Status","Actions"]
-                  .map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">
-                      {h}
-                    </th>
-                  ))}
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-8 text-slate-400">
-                    No users found
-                  </td>
-                </tr>
-              ) : (
-                users.map((u: any) => (
-                  <tr key={u._id} className="border-b hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium">{u.full_name}</td>
-                    <td className="px-4 py-3 text-slate-500">{u.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${roleColor[u.role] || "bg-slate-100"}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium
-                        ${u.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                        {u.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleToggleUser(u._id, u.is_active)}
-                        className={`text-xs px-3 py-1 rounded-lg font-medium
-                          ${u.is_active
-                            ? "bg-red-50 text-red-600 hover:bg-red-100"
-                            : "bg-green-50 text-green-600 hover:bg-green-100"}`}>
-                        {u.is_active ? "Deactivate" : "Activate"}
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="mb-2 hidden lg:grid lg:grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_0.9fr] gap-3 px-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span>Name</span>
+            <span>Email</span>
+            <span>Role</span>
+            <span>Status</span>
+            <span>Actions</span>
+          </div>
+
+          {users.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-white py-10 text-center text-slate-400">
+              No users found
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {users.map((u: any) => (
+                <div
+                  key={u._id}
+                  className={`grid grid-cols-1 gap-3 rounded-xl border border-slate-200 border-t-4 bg-white p-4 shadow-sm transition-shadow hover:shadow-md lg:grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_0.9fr] lg:items-center ${userTopBorder(u.is_active)}`}
+                >
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      Name
+                    </p>
+                    <span className="font-medium text-slate-900">{u.full_name}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      Email
+                    </p>
+                    <span className="text-slate-500">{u.email}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      Role
+                    </p>
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${roleColor[u.role] || "bg-slate-100"}`}
+                    >
+                      {u.role}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      Status
+                    </p>
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${
+                        u.is_active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {u.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      Actions
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleUser(u._id, u.is_active)}
+                      className={`rounded-lg px-3 py-1 text-xs font-medium ${
+                        u.is_active
+                          ? "bg-red-50 text-red-600 hover:bg-red-100"
+                          : "bg-green-50 text-green-600 hover:bg-green-100"
+                      }`}
+                    >
+                      {u.is_active ? "Deactivate" : "Activate"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {/* Audit Logs Tab */}
       {tab === "logs" && (
-        <div className="bg-white rounded-xl border shadow-sm">
-          <div className="px-4 py-3 border-b">
-            <span className="font-medium">Audit Logs ({logs.length})</span>
+        <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+          <div className="mb-4 px-1">
+            <span className="font-medium text-slate-800">Audit Logs ({logs.length})</span>
           </div>
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b">
-              <tr>
-                {["Action","Resource","User","Timestamp"]
-                  .map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase">
-                      {h}
-                    </th>
-                  ))}
-              </tr>
-            </thead>
-            <tbody>
-              {logs.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center py-8 text-slate-400">
-                    No logs yet
-                  </td>
-                </tr>
-              ) : (
-                logs.map((log: any, i: number) => (
-                  <tr key={i} className="border-b hover:bg-slate-50">
-                    <td className="px-4 py-3">
-                      <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded font-medium">
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">{log.resource}</td>
-                    <td className="px-4 py-3 text-slate-500">{log.user_id}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">
+
+          <div className="mb-2 hidden lg:grid lg:grid-cols-[1fr_1.2fr_1fr_1.1fr] gap-3 px-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span>Action</span>
+            <span>Resource</span>
+            <span>User</span>
+            <span>Timestamp</span>
+          </div>
+
+          {logs.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-white py-10 text-center text-slate-400">
+              No logs yet
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {logs.map((log: any, i: number) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 border-t-4 border-t-sky-400 bg-white p-4 shadow-sm transition-shadow hover:shadow-md lg:grid-cols-[1fr_1.2fr_1fr_1.1fr] lg:items-center"
+                >
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      Action
+                    </p>
+                    <span className="rounded bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600">
+                      {log.action}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      Resource
+                    </p>
+                    <span className="text-slate-500">{log.resource}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      User
+                    </p>
+                    <span className="text-slate-500">{log.user_id}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                      Timestamp
+                    </p>
+                    <span className="text-xs text-slate-400">
                       {new Date(log.timestamp).toLocaleString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

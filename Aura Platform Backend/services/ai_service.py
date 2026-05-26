@@ -64,14 +64,127 @@ async def summarize_document(filename: str, doc_type: str, process: dict) -> str
 async def generate_activities(process: dict) -> list[dict]:
     process_name = process.get("steps_data", {}).get("step2", {}).get("process_name", "Process")
     result = await _chat_json(
-        "You are AuRA. Return JSON: {\"activities\": [{\"activity_name\", \"data_needed\", "
-        "\"data_readiness\" (Available|Partial|Missing), \"ai_automation_potential\" (Low|Medium|High), "
-        "\"integration_readiness\", \"frequency\"}]}. Provide 4-6 activities.",
+        "You are AuRA. Return JSON: {\"activities\": [{\"activity_name\", \"description\", "
+        "\"data_management\" (data requirements), \"source_system\", "
+        "\"existing_automation_level\" (Fully Automated|Semi-Automated|Manual|Not Applicable)}]}. "
+        "Provide 4-6 L3 activities grounded in prior steps.",
         f"Generate activity breakdown for process: {process_name}. Context: {_process_context(process)}",
     )
     if result and isinstance(result, dict) and result.get("activities"):
         return result["activities"]
     return _fallback_activities()
+
+
+async def populate_process_entry(process: dict, document_text: str = "") -> dict:
+    s2 = process.get("steps_data", {}).get("step2", {})
+    summaries = s2.get("document_summaries") or []
+    if document_text:
+        summaries = summaries + [document_text]
+    doc_block = "\n\n".join(summaries)[:8000] if summaries else s2.get("process_flow_summary", "")
+    result = await _chat_json(
+        "You are AuRA. Return JSON with keys: process_name, process_description, process_frequency "
+        "(Daily|Weekly|Monthly|Quarterly|Ad-hoc), quality_of_data (Accurate|Mostly Accurate|Partial|Poor), "
+        "goals (array of 2-4 strings), existing_systems (comma-separated string), "
+        "process_summary, sop_summary, volumetrics_summary, kpi_summary.",
+        f"Populate process discovery fields from documents and context.\n"
+        f"Documents:\n{doc_block}\n\nContext: {_process_context(process)}",
+    )
+    if result and isinstance(result, dict):
+        return result
+    pname = process.get("steps_data", {}).get("step2", {}).get("process_name") or "Process Assessment"
+    return {
+        "process_name": pname,
+        "process_description": doc_block or "Process description to be refined.",
+        "process_frequency": "Daily",
+        "quality_of_data": "Mostly Accurate",
+        "goals": ["Reduce manual effort", "Improve SLA compliance"],
+        "existing_systems": "ERP, Email, Spreadsheets",
+        "process_summary": doc_block,
+        "sop_summary": "",
+        "volumetrics_summary": "",
+        "kpi_summary": "",
+    }
+
+
+async def generate_volumetrics(process: dict) -> dict:
+    currency = process.get("steps_data", {}).get("step1", {}).get("currency", "INR")
+    result = await _chat_json(
+        "You are AuRA. Return JSON with numeric fields: monthly_transaction_volume, "
+        "transaction_volume_unit, avg_time_per_transaction_mins, processing_time_unit, "
+        "fte_count, fte_cost_annual, cost_per_transaction, hours_spent_per_day, "
+        "working_days_per_month, current_error_rate_pct, business_impact_errors_monthly, "
+        "revenue_leakage, sla_breach_rate_pct, non_prime_transactions_monthly, "
+        "avg_financial_risk_per_txn, process_observations, annual_cost_estimate. "
+        "Use realistic enterprise estimates.",
+        f"Suggest volumetrics in {currency}. Context: {_process_context(process)}",
+    )
+    if result and isinstance(result, dict):
+        return result
+    return {
+        "monthly_transaction_volume": 5000,
+        "transaction_volume_unit": "Invoices",
+        "avg_time_per_transaction_mins": 15,
+        "processing_time_unit": "minutes",
+        "fte_count": 4,
+        "fte_cost_annual": 2400000,
+        "cost_per_transaction": 480,
+        "hours_spent_per_day": 6,
+        "working_days_per_month": 22,
+        "current_error_rate_pct": 3,
+        "business_impact_errors_monthly": 150000,
+        "revenue_leakage": 500000,
+        "sla_breach_rate_pct": 5,
+        "non_prime_transactions_monthly": 200,
+        "avg_financial_risk_per_txn": 2500,
+        "process_observations": "High manual touchpoints and exception handling drive cost.",
+        "annual_cost_estimate": 600000,
+    }
+
+
+async def generate_tech_stack(process: dict) -> dict:
+    result = await _chat_json(
+        "You are AuRA. Return JSON: {\"technology_stack\": {"
+        "\"document_ai\", \"erp_automation\", \"gen_ai\", \"erp_integration\", "
+        "\"conversational\", \"analytics\"}} — each a short phrase.",
+        f"Recommend technology stack. Context: {_process_context(process)}",
+    )
+    if result and isinstance(result, dict) and result.get("technology_stack"):
+        return result["technology_stack"]
+    return {
+        "document_ai": "Azure Document Intelligence",
+        "erp_automation": "Power Automate / UiPath",
+        "gen_ai": "Azure OpenAI GPT-4",
+        "erp_integration": "SAP BAPI / REST APIs",
+        "conversational": "Microsoft Copilot Studio",
+        "analytics": "Power BI / Azure Monitor",
+    }
+
+
+async def generate_report_fields(process: dict) -> dict:
+    result = await _chat_json(
+        "You are AuRA. Return JSON: {\"report_fields\": {"
+        "process_area, sub_process_name, objective, strategic_goal, key_challenges, "
+        "business_benefits, ai_opportunity, data_readiness, volume_capacity, key_inputs, key_outputs"
+        "}} — each value 1-3 sentences.",
+        f"Fill evaluation summary report fields. Context: {_process_context(process)}",
+    )
+    if result and isinstance(result, dict) and result.get("report_fields"):
+        return result["report_fields"]
+    s1 = process.get("steps_data", {}).get("step1", {})
+    s2 = process.get("steps_data", {}).get("step2", {})
+    return {
+        "process_area": s1.get("process_area", ""),
+        "sub_process_name": s2.get("process_name", ""),
+        "objective": "Automate and optimize the assessed process.",
+        "strategic_goal": "Digital operations excellence",
+        "key_challenges": "Manual steps, data quality, integration gaps",
+        "business_benefits": "Cost reduction and faster cycle time in year 1",
+        "ai_opportunity": "Document AI and workflow automation",
+        "data_readiness": s2.get("quality_of_data", "Partial"),
+        "volume_capacity": "Based on assessed monthly volume and FTE",
+        "key_inputs": "Documents, ERP data, approvals",
+        "key_outputs": "Processed transactions, audit trail, reports",
+    }
 
 
 async def generate_gsda_items(process: dict) -> list[dict]:
@@ -125,6 +238,7 @@ async def generate_archetypes(process: dict) -> list[dict]:
 
 
 async def generate_summary(process: dict) -> dict:
+    report_fields = await generate_report_fields(process)
     result = await _chat_json(
         "You are AuRA. Return JSON: {\"summary\", \"next_steps\" (array of strings), \"roi_estimate\"}.",
         f"Write executive summary for completed assessment. Context: {_process_context(process)}",
@@ -134,8 +248,10 @@ async def generate_summary(process: dict) -> dict:
             "summary": result["summary"],
             "next_steps": result.get("next_steps", []),
             "roi_estimate": result.get("roi_estimate", "25-40% efficiency improvement within 12 months"),
+            "report_fields": report_fields,
         }
     process_name = process.get("steps_data", {}).get("step2", {}).get("process_name", "Process")
+    report_fields = await generate_report_fields(process)
     return {
         "summary": (
             f"Assessment for '{process_name}' shows strong potential for AI-driven automation "
@@ -149,23 +265,40 @@ async def generate_summary(process: dict) -> dict:
             "Create phased implementation roadmap",
         ],
         "roi_estimate": "25-40% reduction in processing time within 12 months",
+        "report_fields": report_fields,
     }
 
 
 def _fallback_activities() -> list[dict]:
     return [
-        {"activity_name": "Document Receipt & Capture", "data_needed": "Invoice PDF, Vendor email",
-         "data_readiness": "Available", "ai_automation_potential": "High",
-         "integration_readiness": "Outlook / Portal API", "frequency": "Daily"},
-        {"activity_name": "Data Extraction & Validation", "data_needed": "Invoice fields, GRN data",
-         "data_readiness": "Partial", "ai_automation_potential": "High",
-         "integration_readiness": "SAP BAPI, OCR", "frequency": "Daily"},
-        {"activity_name": "Approval Routing", "data_needed": "Approval matrix, Budget data",
-         "data_readiness": "Available", "ai_automation_potential": "Medium",
-         "integration_readiness": "Workflow engine", "frequency": "Daily"},
-        {"activity_name": "Exception Handling", "data_needed": "Error logs, Mismatch reports",
-         "data_readiness": "Partial", "ai_automation_potential": "Medium",
-         "integration_readiness": "Email / ERP", "frequency": "Weekly"},
+        {
+            "activity_name": "Document Receipt & Capture",
+            "description": "Receive and log incoming documents from email or portal.",
+            "data_management": "Invoice PDF, Vendor email",
+            "source_system": "Outlook / Vendor Portal",
+            "existing_automation_level": "Semi-Automated",
+        },
+        {
+            "activity_name": "Data Extraction & Validation",
+            "description": "Extract fields and validate against master data.",
+            "data_management": "Invoice fields, GRN data",
+            "source_system": "SAP S/4HANA",
+            "existing_automation_level": "Manual",
+        },
+        {
+            "activity_name": "Approval Routing",
+            "description": "Route invoices through approval matrix.",
+            "data_management": "Approval matrix, Budget data",
+            "source_system": "Workflow engine",
+            "existing_automation_level": "Semi-Automated",
+        },
+        {
+            "activity_name": "Exception Handling",
+            "description": "Resolve mismatches and errors.",
+            "data_management": "Error logs, Mismatch reports",
+            "source_system": "Email / ERP",
+            "existing_automation_level": "Manual",
+        },
     ]
 
 

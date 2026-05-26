@@ -42,11 +42,23 @@ class ClientUpdate(BaseModel):
     contact_person: Optional[ContactPerson] = None
     currency: Optional[str] = None
 
-# ── Process Step 1 — Customer Info ────────────────────────────────────────────
+# ── Process Step 1 — Customer Details ───────────────────────────────────────────
 class Step1Data(BaseModel):
     client_id: str
     assessment_date: str
     currency: Optional[str] = "INR"
+    industry: Optional[str] = ""
+    customer_rep_name: Optional[str] = ""
+    customer_rep_email: Optional[str] = ""
+    customer_rep_role: Optional[str] = ""
+    business_function: Optional[str] = ""
+    process_area: Optional[str] = ""
+    sme_name: Optional[str] = ""
+    sme_email: Optional[str] = ""
+    sme_phone: Optional[str] = ""
+    owner_name: Optional[str] = ""
+    owner_email: Optional[str] = ""
+    owner_phone: Optional[str] = ""
 
     @validator('client_id')
     def client_id_valid(cls, v):
@@ -66,6 +78,8 @@ class Step2Data(BaseModel):
     process_description: Optional[str] = ""
     goals: Optional[List[str]] = []
     existing_systems: Optional[str] = ""
+    process_frequency: Optional[str] = "Daily"
+    quality_of_data: Optional[str] = "Accurate"
     maturity_level: Optional[str] = ""
     process_summary: Optional[str] = ""
     sop_summary: Optional[str] = ""
@@ -83,14 +97,24 @@ class Step3Data(BaseModel):
     key_challenges: Optional[List[str]] = []
     key_improvement_areas: Optional[str] = ""
     monthly_transaction_volume: Optional[int] = 0
+    transaction_volume_unit: Optional[str] = "Invoices"
     fte_count: Optional[int] = 0
     avg_time_per_transaction_mins: Optional[float] = 0
+    processing_time_unit: Optional[str] = "minutes"
+    fte_cost_annual: Optional[float] = 0
+    cost_per_transaction: Optional[float] = 0
+    hours_spent_per_day: Optional[float] = 0
+    working_days_per_month: Optional[int] = 22
+    current_error_rate_pct: Optional[float] = 0
+    business_impact_errors_monthly: Optional[float] = 0
     avg_revenue_per_transaction: Optional[float] = 0
     revenue_leakage: Optional[float] = 0
     delay_impact_on_revenue_pct: Optional[float] = 0
     risk_prone_transactions_count: Optional[int] = 0
+    non_prime_transactions_monthly: Optional[int] = 0
     avg_financial_risk_per_txn: Optional[float] = 0
     sla_breach_rate_pct: Optional[float] = 0
+    process_observations: Optional[str] = ""
     success_metrics: Optional[List[dict]] = []
     annual_cost_estimate: Optional[float] = 0
 
@@ -98,6 +122,10 @@ class Step3Data(BaseModel):
 class Activity(BaseModel):
     activity_name: str
     data_needed: Optional[str] = ""
+    description: Optional[str] = ""
+    data_management: Optional[str] = ""
+    source_system: Optional[str] = ""
+    existing_automation_level: Optional[str] = "Manual"
     data_readiness: Optional[str] = "Available"
     ai_automation_potential: Optional[str] = "Medium"
     integration_readiness: Optional[str] = ""

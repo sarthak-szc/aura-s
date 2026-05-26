@@ -1,29 +1,29 @@
-User Management + Auth  -> fastapi-users[beanie]
+User Management + Auth  -> JWT + bcrypt (custom, MongoDB users)
 Dashboard 
 Client Management 
 Process Managment -> file will be upload at step 2 -> data need populated -> step2,3,4 & user can override it 
 
 
-Tech Stack 
+Tech Stack (As Built — updated)
 
-Layer,Technology,Azure Service
-Frontend,Next.js 15 (App Router + TypeScript + Tailwind + shadcn/ui),Azure Static Web Apps (Recommended) or App Service
-Backend,FastAPI + Python 3.11+ + LangChain + LangGraph,Azure App Service (Container or Python)
-Database,MongoDB Atlas (Fully managed),MongoDB Atlas on Azure
-Vector Store,MongoDB Atlas Vector Search,Built-in (native LangChain integration)
-File Storage,Azure Blob Storage,"For uploaded PDFs, CSVs, contracts"
-Authentication,  fastapi-users[beanie] + Azure AD (optional)
-LLM,Azure OpenAI (gpt-4o)
+Layer,Technology,Where Used,Status
+Frontend,Next.js 16 + React 19 + TypeScript + Tailwind CSS 4,"Aura Platform Frontend — all pages (Vercel)",Implemented
+API Client,Axios,src/lib/api.ts — frontend → backend,Implemented
+Backend,FastAPI + Python 3.11+ + Motor/PyMongo,"Aura Platform Backend — REST API (Vercel serverless / Mangum)",Implemented
+Database,MongoDB Atlas,"users, clients, processes, audit_logs",Implemented
+File Storage,Azure Blob Storage,"Step 2 uploads — blob_service.py",Implemented
+Authentication,JWT + bcrypt (custom),routes/auth.py — login / admin users,Implemented
+LLM / AI,Azure OpenAI (gpt-4o) via OpenAI Python SDK,services/ai_service.py — step autofill (direct API),Implemented
+PDF,ReportLab,routes/report.py — assessment PDF download,Implemented
+Deploy,Vercel,Frontend + API (production URLs in DEPLOY.md),Implemented
+
+Removed from scope (not used in code): LangChain, LangGraph, MongoDB Vector Search, RAG, fastapi-users[beanie], shadcn/ui
 
  
 Implementation Plan
 Phase 0: Project Setup for frontend + backend
-Phase 1: Backend + MongoDB Integration (LangChain + MongoDB Vector Store)
-Phase 2: AI Agents with LangGraph
-	Contract Analysis Agent
-	Spend Analytics Agent
-	Procurement Process Advisor
-	Supplier Intelligence Agent
+Phase 1: Backend + MongoDB + Azure Blob + Azure OpenAI (direct SDK)
+Phase 2: AI populate APIs for process steps (entry, volumetrics, activities, archetypes, tech stack, summary)
 Phase 3: Frontend Development
 Phase 4 : Client Management 
 Phase 5 : Process Managment 

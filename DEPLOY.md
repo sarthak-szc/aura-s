@@ -1,4 +1,20 @@
-# AuRA — Deploy (GitHub → live link)
+# AuRA — Deploy (live links)
+
+## Production (active)
+
+| | URL |
+|---|-----|
+| **Login** | https://aura-frontend-mu.vercel.app/login |
+| **Frontend** | https://aura-frontend-mu.vercel.app |
+| **API** | https://aura-api-omega.vercel.app |
+
+Credentials: `admin@aura.com` / `Admin@123` (Admin role)
+
+Setup once: https://aura-api-omega.vercel.app/api/auth/setup
+
+---
+
+## Optional — Backend on Render (alternative)
 
 Repo: https://github.com/sarthak-szc/aura-s
 

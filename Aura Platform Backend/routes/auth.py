@@ -68,10 +68,16 @@ async def _setup_admin():
     email = settings.DEFAULT_ADMIN_EMAIL.lower()
     existing = await db.users.find_one({"email": email})
     if existing:
-        # Fix old SHA256 / broken bcrypt hashes on re-setup
+        # Fix password, re-activate account, ensure admin role
         await db.users.update_one(
             {"_id": existing["_id"]},
-            {"$set": {"password": hash_password(settings.DEFAULT_ADMIN_PASSWORD)}},
+            {
+                "$set": {
+                    "password": hash_password(settings.DEFAULT_ADMIN_PASSWORD),
+                    "is_active": True,
+                    "role": "admin",
+                }
+            },
         )
         return {
             "message": "Admin password reset — use default password from .env",

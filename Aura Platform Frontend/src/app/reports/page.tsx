@@ -34,55 +34,85 @@ export default function ReportsPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold">Reports</h1>
-      <p className="text-slate-500 text-sm mt-1 mb-6">
+      <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
+      <p className="mt-1 mb-6 text-sm text-slate-500">
         Completed assessments — download PDF reports
       </p>
 
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b">
-            <tr>
-              {["Client", "Process", "Assessment Date", "Completed", "Actions"].map((h) => (
-                <th key={h} className="text-left px-4 py-3 font-medium text-slate-600">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {reports.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="text-center py-10 text-slate-400">
-                  No completed reports yet. Finish a process discovery to see reports here.
-                </td>
-              </tr>
-            ) : (
-              reports.map((r) => (
-                <tr key={r.process_id} className="border-b hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium">{clientName(r.client_id)}</td>
-                  <td className="px-4 py-3">{r.process_name}</td>
-                  <td className="px-4 py-3 text-slate-600">
+      <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+        <div className="mb-4 px-1">
+          <span className="font-medium text-slate-800">
+            Completed Reports ({reports.length})
+          </span>
+        </div>
+
+        <div className="mb-2 hidden lg:grid lg:grid-cols-[1.1fr_1.3fr_1fr_1fr_0.6fr] gap-3 px-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span>Client</span>
+          <span>Process</span>
+          <span>Assessment Date</span>
+          <span>Completed</span>
+          <span>Actions</span>
+        </div>
+
+        {reports.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white py-10 text-center text-slate-400">
+            No completed reports yet. Finish a process discovery to see reports here.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {reports.map((r) => (
+              <div
+                key={r.process_id}
+                className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 border-t-4 border-t-emerald-500 bg-white p-4 shadow-sm transition-shadow hover:shadow-md lg:grid-cols-[1.1fr_1.3fr_1fr_1fr_0.6fr] lg:items-center"
+              >
+                <div>
+                  <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                    Client
+                  </p>
+                  <span className="font-medium text-slate-900">{clientName(r.client_id)}</span>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                    Process
+                  </p>
+                  <span className="text-slate-800">{r.process_name}</span>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                    Assessment Date
+                  </p>
+                  <span className="text-slate-600">
                     {r.assessment_date
                       ? new Date(r.assessment_date).toLocaleDateString()
                       : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  </span>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                    Completed
+                  </p>
+                  <span className="text-slate-600">
                     {r.completed_at
                       ? new Date(r.completed_at).toLocaleDateString()
                       : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => downloadPdf(r.process_id, r.process_name)}
-                      className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium"
-                    >
-                      <Download size={14} /> PDF
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  </span>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase text-slate-400 lg:hidden">
+                    Actions
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => downloadPdf(r.process_id, r.process_name)}
+                    className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                  >
+                    <Download size={14} /> PDF
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,8 +1,8 @@
 "use client"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { authAPI } from "@/lib/api"
 import { setSession } from "@/lib/auth"
+import { getApiErrorMessage } from "@/lib/apiError"
 
 const ROLES = ["Admin", "Process Owner", "Viewer"] as const
 type Role = (typeof ROLES)[number]
@@ -21,7 +21,6 @@ const FEATURES = [
 ]
 
 export default function LoginPage() {
-  const router = useRouter()
   const [role, setRole] = useState<Role>("Admin")
   const [form, setForm] = useState(ROLE_PRESETS.Admin)
   const [error, setError] = useState("")
@@ -46,12 +45,27 @@ export default function LoginPage() {
     setLoading(true)
     setError("")
     try {
+      if (role !== "Admin") {
+        setError("Only Admin login is enabled. Select Admin role or use admin@aura.com")
+        setLoading(false)
+        return
+      }
       const res = await authAPI.login(form)
       setSession(res.data.token, res.data.user)
-      router.push("/dashboard")
+      window.location.href = "/dashboard"
+      return
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { detail?: string } } }
-      setError(err.response?.data?.detail || "Invalid email or password")
+      const err = e as {
+        response?: { data?: { detail?: string }; status?: number }
+        message?: string
+        code?: string
+      }
+      if (!err.response) {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+        setError(`Cannot reach API (${apiUrl}). Check backend is running or Vercel env NEXT_PUBLIC_API_URL.`)
+      } else {
+        setError(getApiErrorMessage(err, "Invalid email or password"))
+      }
     }
     setLoading(false)
   }
@@ -70,12 +84,13 @@ export default function LoginPage() {
             <span
               className="text-2xl font-bold tracking-tight"
               style={{
-                background: "linear-gradient(90deg, #7dd3fc, #38bdf8, #f472b6, #fb923c)",
+                background: "linear-gradient(90deg, #1570ef, #7c3aed, #ec4899, #f59e0b)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
               }}
             >
-              senzcraft
+              SenzCraft
             </span>
           </div>
 

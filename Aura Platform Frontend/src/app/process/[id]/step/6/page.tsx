@@ -1,8 +1,20 @@
 "use client"
+
 import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
-import StepperBar from "@/components/process/StepperBar"
+import { Pencil, Trash2 } from "lucide-react"
+import ProcessStepShell from "@/components/process/ProcessStepShell"
+import {
+  StepSectionHeader,
+  BtnPrimary,
+  BtnPurple,
+  SectionTitle,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+  FieldLabel,
+} from "@/components/process/processFormUi"
 import { processAPI } from "@/lib/api"
+import { useProcessWizard } from "@/hooks/useProcessWizard"
 
 interface Archetype {
   archetype_name: string
@@ -13,147 +25,407 @@ interface Archetype {
   is_selected: boolean
 }
 
-export default function AIArchetypes() {
-  const router = useRouter()
-  const { id } = useParams()
-  const [archetypes, setArchetypes]   = useState<Archetype[]>([])
-  const [loading, setLoading]         = useState(false)
-  const [generating, setGenerating]   = useState(false)
-  const [error, setError]             = useState("")
-  const [selected, setSelected]       = useState<number | null>(null)
+const DEFAULT_TECH = {
+  document_ai: "",
+  erp_integration: "",
+  erp_automation: "",
+  conversational: "",
+  gen_ai: "",
+  analytics: "",
+}
 
-  const complexityColor = {
-    Low:    "bg-green-100 text-green-700",
-    Medium: "bg-orange-100 text-orange-700",
-    High:   "bg-red-100 text-red-700",
-  }
+const TECH_FIELDS: { key: keyof typeof DEFAULT_TECH; label: string }[] = [
+  { key: "document_ai", label: "Document AI" },
+  { key: "erp_integration", label: "ERP Integration" },
+  { key: "erp_automation", label: "ERP Automation" },
+  { key: "conversational", label: "Conversational AI" },
+  { key: "gen_ai", label: "Gen AI / LLM" },
+  { key: "analytics", label: "Analytics" },
+]
+
+export default function AIArchetypes() {
+  const w = useProcessWizard()
+  const [archetypes, setArchetypes] = useState<Archetype[]>([])
+  const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [editingIdx, setEditingIdx] = useState<number | null>(null)
+  const [tech, setTech] = useState(DEFAULT_TECH)
+  const [complexity, setComplexity] = useState({
+    overall: "Medium - 8 to 12 weeks",
+    timeline: "12",
+    timelineUnit: "Weeks",
+    risk: "Data Quality",
+    notes:
+      "SAP integration and change management are primary risks. Phased rollout recommended.",
+  })
+  const [generating, setGenerating] = useState(false)
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const p = await w.loadProcess()
+        const list = p.steps_data?.step6?.archetypes
+        const t = p.steps_data?.step6?.technology_stack
+        const c = p.steps_data?.step6?.complexity
+        if (t) setTech({ ...DEFAULT_TECH, ...t })
+        if (c) {
+          setComplexity((x) => ({
+            ...x,
+            ...c,
+            overall: String(c.overall || x.overall).replace(/—/g, "-"),
+            timelineUnit:
+              c.timelineUnit === "weeks"
+                ? "Weeks"
+                : c.timelineUnit === "months"
+                  ? "Months"
+                  : c.timelineUnit || x.timelineUnit,
+          }))
+        }
+        if (list?.length) {
+          setArchetypes(list)
+          const sel = new Set<number>()
+          list.forEach((a: Archetype, i: number) => {
+            if (a.is_selected) sel.add(i)
+          })
+          setSelected(sel.size ? sel : new Set(list.map((_: Archetype, i: number) => i)))
+        } else {
+          generateArchetypes()
+        }
+        const techEmpty =
+          !t || !Object.values({ ...DEFAULT_TECH, ...t }).some((v) => String(v).trim())
+        if (techEmpty) {
+          const tr = await processAPI.generateTechStack(w.processId)
+          setTech({ ...DEFAULT_TECH, ...(tr.data.technology_stack || {}) })
+        }
+      } catch {
+        generateArchetypes()
+      }
+    }
+    run()
+  }, [w.processId])
 
   const generateArchetypes = async () => {
     setGenerating(true)
-    setError("")
+    w.setError("")
     try {
-      const res = await processAPI.generateArchetypes(id as string)
-      setArchetypes(res.data.archetypes)
+      const res = await processAPI.generateArchetypes(w.processId)
+      const list = res.data.archetypes || []
+      setArchetypes(list)
+      setSelected(new Set(list.map((_: Archetype, i: number) => i)))
     } catch {
-      setError("AI generation failed. Please try again.")
+      w.setError("AI generation failed.")
     }
     setGenerating(false)
   }
 
-  useEffect(() => {
-    // Auto-generate on page load
-    generateArchetypes()
-  }, [])
+  const toggleSelect = (i: number) => {
+    const next = new Set(selected)
+    if (next.has(i)) next.delete(i)
+    else next.add(i)
+    setSelected(next.size ? next : new Set([i]))
+  }
+
+  const addArchetype = () => {
+    const next = [
+      ...archetypes,
+      {
+        archetype_name: "New AI Archetype",
+        fit_score: 70,
+        description: "",
+        recommended_tools: [] as string[],
+        implementation_complexity: "Medium" as const,
+        is_selected: true,
+      },
+    ]
+    setArchetypes(next)
+    setSelected(new Set([...selected, next.length - 1]))
+    setEditingIdx(next.length - 1)
+  }
+
+  const updateArchetype = (i: number, patch: Partial<Archetype>) => {
+    setArchetypes(archetypes.map((a, idx) => (idx === i ? { ...a, ...patch } : a)))
+  }
+
+  const deleteArchetype = (i: number) => {
+    if (!confirm("Delete this archetype?")) return
+    const next = archetypes.filter((_, idx) => idx !== i)
+    setArchetypes(next)
+    const sel = new Set<number>()
+    selected.forEach((idx) => {
+      if (idx < i) sel.add(idx)
+      else if (idx > i) sel.add(idx - 1)
+    })
+    setSelected(sel.size ? sel : next.length ? new Set([0]) : new Set())
+    if (editingIdx === i) setEditingIdx(null)
+    else if (editingIdx !== null && editingIdx > i) setEditingIdx(editingIdx - 1)
+  }
+
+  const persist = async (advance = false) => {
+    if (selected.size === 0) throw new Error("Select at least one archetype")
+    const updated = archetypes.map((a, i) => ({ ...a, is_selected: selected.has(i) }))
+    await processAPI.saveArchetypes(w.processId, {
+      archetypes: updated,
+      technology_stack: tech,
+      complexity,
+      ...(advance ? { advance: true } : {}),
+    })
+  }
+
+  const handleSave = async () => {
+    if (selected.size === 0) {
+      w.setError("Select at least one archetype")
+      return
+    }
+    w.setSaving(true)
+    w.setError("")
+    try {
+      await persist()
+      w.flashSuccess()
+    } catch (e: unknown) {
+      w.setError(e instanceof Error ? e.message : "Save failed")
+    }
+    w.setSaving(false)
+  }
 
   const handleNext = async () => {
-    if (selected === null) { setError("Please select an archetype"); return }
-    setLoading(true)
-    setError("")
+    w.setLoading(true)
+    w.setError("")
     try {
-      const updated = archetypes.map((a, i) => ({...a, is_selected: i === selected}))
-      await processAPI.saveArchetypes(id as string, { archetypes: updated })
-      router.push(`/process/${id}/step/7`)
-    } catch (e: any) {
-      setError(e.response?.data?.detail || "Something went wrong")
+      await persist(true)
+      w.goNext(7)
+    } catch (e: unknown) {
+      w.setApiError(e, "Error")
     }
-    setLoading(false)
+    w.setLoading(false)
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <StepperBar current={6}/>
-      <div className="bg-white rounded-xl border p-6 mt-4 space-y-6">
+    <ProcessStepShell
+      step={6}
+      currency={w.currency}
+      error={w.error}
+      success={w.success}
+      onCancel={w.onCancel}
+      onPrevious={() => w.goPrevious(5)}
+      onSave={handleSave}
+      onNext={handleNext}
+      loading={w.loading}
+      saving={w.saving}
+      nextDisabled={selected.size === 0}
+    >
+      <StepSectionHeader
+        title="AI Archetypes"
+        subtitle="Select AI patterns for this process. Use edit or delete to refine. Multiple selections allowed."
+        action={
+          <div className="flex shrink-0 gap-2">
+            <BtnPurple onClick={generateArchetypes} disabled={generating}>
+              {generating ? "Generating..." : "✨ Generate with AI"}
+            </BtnPurple>
+            <BtnPrimary onClick={addArchetype}>+ Add Archetype</BtnPrimary>
+          </div>
+        }
+      />
 
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-bold">AI Archetypes</h2>
-          <button onClick={generateArchetypes} disabled={generating}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
-            {generating ? "🤖 Generating..." : "✨ Regenerate"}
-          </button>
+      <div className="space-y-8">
+        {/* Archetype cards */}
+        <div>
+          {generating && (
+            <p className="py-8 text-center text-sm text-blue-600">Generating archetypes with AI...</p>
+          )}
+          {!generating && archetypes.length === 0 && (
+            <p className="rounded-xl border border-dashed border-slate-200 py-10 text-center text-sm text-slate-400">
+              No archetypes yet. Click Generate with AI or Add Archetype.
+            </p>
+          )}
+          {!generating && archetypes.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {archetypes.map((arch, i) => (
+                <div
+                  key={i}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleSelect(i)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      toggleSelect(i)
+                    }
+                  }}
+                  className={`relative flex min-h-[220px] cursor-pointer flex-col rounded-xl border-2 p-4 transition-all ${
+                    selected.has(i)
+                      ? "border-blue-500 bg-blue-50/40 shadow-sm"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <span className="text-2xl text-blue-500" aria-hidden>
+                      ◆
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        title="Edit"
+                        className="rounded p-1 text-slate-400 hover:bg-white hover:text-blue-600"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingIdx(editingIdx === i ? null : i)
+                        }}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        title="Delete"
+                        className="rounded p-1 text-slate-400 hover:bg-white hover:text-red-500"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteArchetype(i)
+                        }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(i)}
+                        onChange={() => toggleSelect(i)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="ml-1 h-4 w-4 rounded border-slate-300"
+                      />
+                    </div>
+                  </div>
+
+                  {editingIdx === i ? (
+                    <div
+                      className="flex flex-1 flex-col gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FormInput
+                        value={arch.archetype_name}
+                        onChange={(e) =>
+                          updateArchetype(i, { archetype_name: e.target.value })
+                        }
+                        placeholder="Archetype name"
+                      />
+                      <FormTextarea
+                        rows={4}
+                        value={arch.description}
+                        onChange={(e) =>
+                          updateArchetype(i, { description: e.target.value })
+                        }
+                        placeholder="Description"
+                      />
+                      <FormInput
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={arch.fit_score}
+                        onChange={(e) =>
+                          updateArchetype(i, {
+                            fit_score: Number(e.target.value) || 0,
+                          })
+                        }
+                        placeholder="Match %"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="text-sm font-bold leading-snug text-slate-900">
+                        {arch.archetype_name}
+                      </h3>
+                      <p className="mt-2 flex-1 text-xs leading-relaxed text-slate-600">
+                        {arch.description || "No description yet."}
+                      </p>
+                    </>
+                  )}
+
+                  <p className="mt-3 text-xs font-bold text-blue-600">
+                    {arch.fit_score}% Match
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {generating && (
-          <div className="text-center py-12">
-            <p className="text-blue-600 font-medium">🤖 AI is generating archetypes...</p>
-            <p className="text-xs text-slate-400 mt-1">This may take 20–30 seconds</p>
-          </div>
-        )}
-
-        {/* Archetype Cards */}
-        {!generating && archetypes.length > 0 && (
-          <div className="grid grid-cols-3 gap-4">
-            {archetypes.map((arch, i) => (
-              <div key={i}
-                onClick={() => setSelected(i)}
-                className={`border-2 rounded-xl p-5 cursor-pointer transition-all space-y-3
-                  ${selected === i
-                    ? "border-blue-600 bg-blue-50 shadow-md"
-                    : "border-slate-200 hover:border-blue-300"}`}>
-
-                {/* Fit Score */}
-                <div className="flex justify-between items-center">
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full
-                    ${selected === i ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"}`}>
-                    {arch.fit_score}% Fit
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium
-                    ${complexityColor[arch.implementation_complexity]}`}>
-                    {arch.implementation_complexity} Complexity
-                  </span>
-                </div>
-
-                {/* Name */}
-                <h3 className="font-bold text-base">{arch.archetype_name}</h3>
-
-                {/* Description */}
-                <p className="text-xs text-slate-500 leading-relaxed">{arch.description}</p>
-
-                {/* Tools */}
-                <div>
-                  <p className="text-xs font-medium text-slate-400 mb-1">Recommended Tools</p>
-                  <div className="flex flex-wrap gap-1">
-                    {arch.recommended_tools.map((tool, j) => (
-                      <span key={j}
-                        className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
-                        {tool}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {selected === i && (
-                  <div className="text-center text-blue-600 text-xs font-bold">
-                    ✅ Selected
-                  </div>
-                )}
+        {/* Technology Stack */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <SectionTitle icon="⚙" title="Technology Stack" />
+          <p className="-mt-2 mb-4 text-xs text-slate-500">
+            Recommended platforms for selected archetypes. Edit as needed.
+          </p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {TECH_FIELDS.map(({ key, label }) => (
+              <div key={key}>
+                <FieldLabel>{label}</FieldLabel>
+                <FormTextarea
+                  rows={3}
+                  value={tech[key]}
+                  onChange={(e) => setTech({ ...tech, [key]: e.target.value })}
+                  placeholder={`Draft: ${label} recommendation`}
+                />
               </div>
             ))}
           </div>
-        )}
+        </div>
 
-        {!generating && archetypes.length === 0 && (
-          <div className="text-center py-12 text-slate-400">
-            <p>Click "✨ Regenerate" to generate AI archetypes</p>
+        {/* Implementation Complexity */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <SectionTitle icon="⏱" title="Implementation Complexity" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <FieldLabel>Overall Complexity</FieldLabel>
+              <FormSelect
+                value={complexity.overall}
+                onChange={(e) => setComplexity({ ...complexity, overall: e.target.value })}
+              >
+                <option>Low - 4 to 6 weeks</option>
+                <option>Medium - 8 to 12 weeks</option>
+                <option>High - 12+ weeks</option>
+              </FormSelect>
+            </div>
+            <div>
+              <FieldLabel>Estimated Timeline</FieldLabel>
+              <div className="flex overflow-hidden rounded-lg border border-slate-200">
+                <FormInput
+                  type="number"
+                  className="border-0 rounded-none"
+                  value={complexity.timeline}
+                  onChange={(e) => setComplexity({ ...complexity, timeline: e.target.value })}
+                />
+                <select
+                  className="border-l border-slate-200 bg-slate-50 px-3 text-xs text-slate-600"
+                  value={complexity.timelineUnit}
+                  onChange={(e) =>
+                    setComplexity({ ...complexity, timelineUnit: e.target.value })
+                  }
+                >
+                  <option>Weeks</option>
+                  <option>Months</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <FieldLabel>Key Risk Factor</FieldLabel>
+              <FormSelect
+                value={complexity.risk}
+                onChange={(e) => setComplexity({ ...complexity, risk: e.target.value })}
+              >
+                <option>Data Quality</option>
+                <option>Integration</option>
+                <option>Change Management</option>
+                <option>Compliance</option>
+              </FormSelect>
+            </div>
           </div>
-        )}
-
-        <div className="flex justify-between pt-2">
-          <button onClick={() => router.back()}
-            className="border px-6 py-2 rounded-lg text-sm hover:bg-slate-50">
-            ← Back
-          </button>
-          <button onClick={handleNext} disabled={loading || selected === null}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-40">
-            {loading ? "Saving..." : "Next →"}
-          </button>
+          <div className="mt-4">
+            <FieldLabel>Complexity Notes</FieldLabel>
+            <FormTextarea
+              rows={4}
+              value={complexity.notes}
+              onChange={(e) => setComplexity({ ...complexity, notes: e.target.value })}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </ProcessStepShell>
   )
 }
