@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import { clientAPI } from "@/lib/api"
+import { getApiErrorMessage } from "@/lib/apiError"
 import { Client } from "@/lib/types"
 
 export default function EditClientModal({ client, onClose, onSaved }:
@@ -14,19 +15,32 @@ export default function EditClientModal({ client, onClose, onSaved }:
     currency: client.currency
   })
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSave = async () => {
+    setError("")
     setLoading(true)
-    await clientAPI.update(client._id, form)
-    setLoading(false)
-    onSaved()
-    onClose()
+    try {
+      await clientAPI.update(client._id, form)
+      onSaved()
+      onClose()
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, "Failed to update client"))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl space-y-3">
         <h2 className="text-lg font-bold">Edit Client</h2>
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
         <input defaultValue={client.name} className="w-full border rounded-lg p-2 text-sm"
           onChange={e => setForm({...form, name: e.target.value})}/>

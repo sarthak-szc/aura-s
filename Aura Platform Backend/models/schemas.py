@@ -3,23 +3,26 @@ from typing import Optional, List
 
 # ── Contact Person ────────────────────────────────────────────────────────────
 class ContactPerson(BaseModel):
-    name: str
+    name: Optional[str] = ""
     email: EmailStr
-    phone: str
+    phone: Optional[str] = ""
     designation: Optional[str] = ""
 
-    @validator('name')
+    @validator("name")
     def name_valid(cls, v):
-        if len(v.strip()) < 2:
-            raise ValueError('Contact name must be at least 2 characters')
+        v = (v or "").strip()
+        if v and len(v) < 2:
+            raise ValueError("Contact name must be at least 2 characters")
         return v
 
-    @validator('phone')
+    @validator("phone")
     def phone_valid(cls, v):
-        digits = ''.join(filter(str.isdigit, v))
+        if not v or not str(v).strip():
+            return ""
+        digits = "".join(filter(str.isdigit, str(v)))
         if len(digits) < 10:
-            raise ValueError('Phone must be at least 10 digits')
-        return v
+            raise ValueError("Phone must be at least 10 digits when provided")
+        return str(v).strip()
 
 # ── Client Schemas ────────────────────────────────────────────────────────────
 class ClientCreate(BaseModel):
@@ -29,11 +32,17 @@ class ClientCreate(BaseModel):
     contact_person: ContactPerson
     currency: Optional[str] = "INR"
 
-    @validator('name')
+    @validator("name")
     def name_valid(cls, v):
         if len(v.strip()) < 2:
-            raise ValueError('Company name must be at least 2 characters')
-        return v
+            raise ValueError("Company name must be at least 2 characters")
+        return v.strip()
+
+    @validator("industry")
+    def industry_valid(cls, v):
+        if not (v or "").strip():
+            raise ValueError("Industry is required")
+        return (v or "").strip()
 
 class ClientUpdate(BaseModel):
     name: Optional[str] = None
